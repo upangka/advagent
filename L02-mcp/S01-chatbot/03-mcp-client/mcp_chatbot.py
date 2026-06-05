@@ -63,10 +63,19 @@ class McpChatBot:
             args=['run', 'chatbot_mcp_server.py'],
             env=None
         )
+
+        # Launch the server as subprocess & returns the read/write streams
+        # read: the stream that client will use to read msgs from the server
+        # write: the stream that client will use to write msgs to the server
         async with stdio_client(server_params) as (read, write):
+            # The client session is used to initialize the connection
+            # and send request to the server
             async with ClientSession(read, write) as session:
                 self.session = session
+                # Initialize the connection(1:1 connection with the server)
                 await session.initialize()
+
+                # list available tools
                 response = await session.list_tools()
                 tools = response.tools
                 print('\n Connected to server with tools: ',
@@ -86,8 +95,8 @@ class McpChatBot:
 
 
 async def main():
-    mcp = McpChatBot()
-    await mcp.connect_to_server_and_run()
+    chat_bot = McpChatBot()
+    await chat_bot.connect_to_server_and_run()
 
 
 if __name__ == '__main__':
