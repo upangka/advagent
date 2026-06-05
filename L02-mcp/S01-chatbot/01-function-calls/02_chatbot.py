@@ -144,7 +144,8 @@ mapping_tool_function = {
 
 
 def execute_tool(tool: str,tool_args: str) -> str:
-    kwargs = json.loads(tools_args)
+    kwargs = json.loads(tool_args)
+    print(f'{"*"*3} 正在调用... {tool} {"*"*3} ')
     result = mapping_tool_function[tool](**kwargs)
     
     if result is None:
@@ -161,7 +162,6 @@ def execute_tool(tool: str,tool_args: str) -> str:
 """Step 03
 Define how to invoke llm
 """
-
 
 # define function to invoke the LLM
 def invoke_llm(messages):
@@ -189,18 +189,21 @@ Define the chatbot
 
 # process use query
 def process(query: str):
-    msgs = [{'role': 'user', 'content': query}]
+    msgs = [
+            {'role': 'system','content': '你的名字叫AxShenZ'},
+            {'role': 'user', 'content': query}]
 
     while True:
         msg = invoke_llm(msgs)
         if msg.tool_calls:
-            # call tool
             print(msg.content)
+            # Keep the tool calls info that AI will invoke
+            msgs.append(msg)
+
+            # call the tool
             for tool in msg.tool_calls:
                 result = execute_tool(tool.function.name, tool.function.arguments)
                 msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
-
-
         elif msg.content:
             print(msg.content)
             break
@@ -216,5 +219,5 @@ def chat_loop():
         print("See you next time")
         sys.exit(0)
 
-
-chat_loop()
+if __name__ == '__main__':
+    chat_loop()

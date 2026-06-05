@@ -111,6 +111,7 @@ client = OpenAI(
 
 msgs = [{'role': 'user', 'content': '帮我查询LLM相关的论文?'}]
 msg = invoke_llm(msgs)
+print(msg)
 if msg.tool_calls:
     f = msg.tool_calls[0].function
     print(f.name,f.arguments)
