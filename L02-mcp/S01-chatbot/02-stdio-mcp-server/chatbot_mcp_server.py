@@ -23,11 +23,12 @@ mcp = FastMCP("research arxiv")
 
 
 """Step 02
-define tool functions ,tool schema, tool mapping
+Decorating the function with @mcp.tool().
+FastMCP automatically generates the necessary MCP Schema base 
+on type hints and doc-strings.
 """
 
-
-# define two function tools
+@mcp.tool()
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
     """
     Search for papers on arXiv based on a topic and store their information.
@@ -79,7 +80,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     print(f"Results save in {file_path.resolve()}")
     return paper_ids
 
-
+@mcp.tool()
 def extra_info(paper_id: str) -> str:
     """
     Search for information about a specific paper across all topic directories.
