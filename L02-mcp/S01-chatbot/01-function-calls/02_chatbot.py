@@ -33,7 +33,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results=max_results,
+        max_results= max_results if max_results > 5 else 5,
         sort_by=arxiv.SortCriterion.Relevance
     )
     papers = client.results(search_req)
@@ -145,7 +145,7 @@ mapping_tool_function = {
 
 def execute_tool(tool: str,tool_args: str) -> str:
     kwargs = json.loads(tool_args)
-    print(f'{"*"*3} 正在调用... {tool} {"*"*3} ')
+    print(f'{"*"*3} 正在调用... {tool} 参数为{tool_args} {"*"*3} ')
     result = mapping_tool_function[tool](**kwargs)
     
     if result is None:
@@ -190,7 +190,7 @@ Define the chatbot
 # process use query
 def process(query: str):
     msgs = [
-            {'role': 'system','content': '你的名字叫AxShenZ'},
+            {'role': 'system','content': '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
             {'role': 'user', 'content': query}]
 
     while True:
