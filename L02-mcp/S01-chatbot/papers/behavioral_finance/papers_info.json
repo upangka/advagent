@@ -1,0 +1,62 @@
+{
+  "2111.09395v1": {
+    "title": "FinRL: Deep Reinforcement Learning Framework to Automate Trading in Quantitative Finance",
+    "authors": [
+      "Xiao-Yang Liu",
+      "Hongyang Yang",
+      "Jiechao Gao",
+      "Christina Dan Wang"
+    ],
+    "summary": "Deep reinforcement learning (DRL) has been envisioned to have a competitive edge in quantitative finance. However, there is a steep development curve for quantitative traders to obtain an agent that automatically positions to win in the market, namely \\textit{to decide where to trade, at what price} and \\textit{what quantity}, due to the error-prone programming and arduous debugging. In this paper, we present the first open-source framework \\textit{FinRL} as a full pipeline to help quantitative traders overcome the steep learning curve. FinRL is featured with simplicity, applicability and extensibility under the key principles, \\textit{full-stack framework, customization, reproducibility} and \\textit{hands-on tutoring}.\n  Embodied as a three-layer architecture with modular structures, FinRL implements fine-tuned state-of-the-art DRL algorithms and common reward functions, while alleviating the debugging workloads. Thus, we help users pipeline the strategy design at a high turnover rate. At multiple levels of time granularity, FinRL simulates various markets as training environments using historical data and live trading APIs. Being highly extensible, FinRL reserves a set of user-import interfaces and incorporates trading constraints such as market friction, market liquidity and investor's risk-aversion. Moreover, serving as practitioners' stepping stones, typical trading tasks are provided as step-by-step tutorials, e.g., stock trading, portfolio allocation, cryptocurrency trading, etc.",
+    "pdf_url": "https://arxiv.org/pdf/2111.09395v1",
+    "published": "2021-11-07"
+  },
+  "quant-ph/0406129v1": {
+    "title": "Quantum Game Theory in Finance",
+    "authors": [
+      "Edward W. Piotrowski",
+      "J. Sladkowski"
+    ],
+    "summary": "  This is a short review of the background and recent development in quantum game theory and its possible application in economics and finance. The intersection of science and society is also discussed. The review is addressed to non--specialists.",
+    "pdf_url": "https://arxiv.org/pdf/quant-ph/0406129v1",
+    "published": "2004-06-18"
+  },
+  "1710.03211v2": {
+    "title": "Behavioral Finance -- Asset Prices Predictability, Equity Premium Puzzle, Volatility Puzzle: The Rational Finance Approach",
+    "authors": [
+      "Svetlozar Rachev",
+      "Stoyan Stoyanov",
+      "Stefan Mittnik",
+      "Frank J. Fabozzi",
+      "Abootaleb Shirvani"
+    ],
+    "summary": "In this paper we address three main objections of behavioral finance to the theory of rational finance, considered as anomalies the theory of rational finance cannot explain: Predictability of asset returns, The Equity Premium, (The Volatility Puzzle. We offer resolutions of those objections within the rational finance. We do not claim that those are the only possible explanations of the anomalies, but offer statistical models within the rational theory of finance which can be used without relying on behavioral finance assumptions when searching for explanations of those anomalies.",
+    "pdf_url": "https://arxiv.org/pdf/1710.03211v2",
+    "published": "2017-10-09"
+  },
+  "2005.05310v1": {
+    "title": "Rational Finance Approach to Behavioral Option Pricing",
+    "authors": [
+      "Jiexin Dai",
+      "Abootaleb Shirvani",
+      "Frank J. Fabozzi"
+    ],
+    "summary": "When pricing options, there may be different views on the instantaneous mean return of the underlying price process. According to Black (1972), where there exist heterogeneous views on the instantaneous mean return, this will result in arbitrage opportunities. Behavioral finance proponents argue that such heterogenous views are likely to occur and this will not impact option pricing models proposed by rational dynamic asset pricing theory and will not give rise to volatility smiles. To rectify this, a leading advocate of behavioral finance has proposed a behavioral option pricing model. As there may be unexplored links between the behavioral and rational approaches to option pricing, in this paper we revisit Shefrin (2008) option pricing model as an example and suggest one approach to modify this behavioral finance option pricing formula to be consistent with rational dynamic asset pricing theory by introducing arbitrage transaction costs which offset the gains from arbitrage trades.",
+    "pdf_url": "https://arxiv.org/pdf/2005.05310v1",
+    "published": "2020-05-10"
+  },
+  "2111.05188v1": {
+    "title": "FinRL-Podracer: High Performance and Scalable Deep Reinforcement Learning for Quantitative Finance",
+    "authors": [
+      "Zechu Li",
+      "Xiao-Yang Liu",
+      "Jiahao Zheng",
+      "Zhaoran Wang",
+      "Anwar Walid",
+      "Jian Guo"
+    ],
+    "summary": "Machine learning techniques are playing more and more important roles in finance market investment. However, finance quantitative modeling with conventional supervised learning approaches has a number of limitations. The development of deep reinforcement learning techniques is partially addressing these issues. Unfortunately, the steep learning curve and the difficulty in quick modeling and agile development are impeding finance researchers from using deep reinforcement learning in quantitative trading. In this paper, we propose an RLOps in finance paradigm and present a FinRL-Podracer framework to accelerate the development pipeline of deep reinforcement learning (DRL)-driven trading strategy and to improve both trading performance and training efficiency. FinRL-Podracer is a cloud solution that features high performance and high scalability and promises continuous training, continuous integration, and continuous delivery of DRL-driven trading strategies, facilitating a rapid transformation from algorithmic innovations into a profitable trading strategy. First, we propose a generational evolution mechanism with an ensemble strategy to improve the trading performance of a DRL agent, and schedule the training of a DRL algorithm onto a GPU cloud via multi-level mapping. Then, we carry out the training of DRL components with high-performance optimizations on GPUs. Finally, we evaluate the FinRL-Podracer framework for a stock trend prediction task on an NVIDIA DGX SuperPOD cloud. FinRL-Podracer outperforms three popular DRL libraries Ray RLlib, Stable Baseline 3 and FinRL, i.e., 12% \\sim 35% improvements in annual return, 0.1 \\sim 0.6 improvements in Sharpe ratio and 3 times \\sim 7 times speed-up in training time. We show the high scalability by training a trading agent in 10 minutes with $80$ A100 GPUs, on NASDAQ-100 constituent stocks with minute-level data over 10 years.",
+    "pdf_url": "https://arxiv.org/pdf/2111.05188v1",
+    "published": "2021-11-07"
+  }
+}

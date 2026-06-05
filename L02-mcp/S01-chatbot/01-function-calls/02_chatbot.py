@@ -30,12 +30,14 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     # Use arxiv to find the papers
     client = arxiv.Client()
 
-    # build search request
+        # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= max_results if max_results > 5 else 5,
+        max_results= max_results if max_results < 5 else 5,
         sort_by=arxiv.SortCriterion.Relevance
     )
+    
+    print(f"查询的论文数量{search_req.max_results}")
     papers = client.results(search_req)
 
     # store to json file
