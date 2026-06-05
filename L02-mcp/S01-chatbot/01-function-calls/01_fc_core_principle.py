@@ -2,7 +2,7 @@
 The basic principle of function calling
 """
 import os
-
+import json
 from openai import OpenAI
 
 
@@ -14,7 +14,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         topic: The topic to search for
         max_results: Maximum number of results to retrieve
     """
-    ...
+    print(topic,max_results)
 
 
 def extra_info(paper_id: str):
@@ -109,6 +109,10 @@ client = OpenAI(
     api_key=os.environ.get('DEEPSEEK_API_KEY'),
     base_url="https://api.deepseek.com")
 
-msgs = [{'role': 'user', 'content': '你能使用工具?'}]
-response = invoke_llm(msgs)
-print(response.model_dump_json(indent=2))
+msgs = [{'role': 'user', 'content': '帮我查询LLM相关的论文?'}]
+msg = invoke_llm(msgs)
+if msg.tool_calls:
+    f = msg.tool_calls[0].function
+    print(f.name,f.arguments)
+    mapping_tool_function[f.name](**json.loads(f.arguments))
+# print(msg.model_dump_json(indent=2))

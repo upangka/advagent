@@ -4,19 +4,20 @@ LLM call tools
 implement the two tools
 """
 
-import sys
-import os
 import json
+import os
+import sys
 from pathlib import Path
+
 import arxiv
 from openai import OpenAI
 
-PAPERS_DIR="papers"
-
+PAPERS_DIR = "papers"
 
 """Step 01
 define tool functions ,tool schema, tool mapping
 """
+
 
 # define two function tools
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
@@ -31,26 +32,26 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
 
     # build search request
     search_req = arxiv.Search(
-                query=topic,
-                max_results=max_results,
-                sort_by=arxiv.SortCriterion.Relevance
-            )
+        query=topic,
+        max_results=max_results,
+        sort_by=arxiv.SortCriterion.Relevance
+    )
     papers = client.results(search_req)
-    
+
     # store to json file
-    path = Path(f"../{PAPERS_DIR}") / (topic.replace(" ","_"))
-    path.mkdir(exist_ok=True,parents=True)
+    path = Path(f"../{PAPERS_DIR}") / (topic.replace(" ", "_"))
+    path.mkdir(exist_ok=True, parents=True)
     file_path = path / "papers_info.json"
     # load original paper info
     try:
-        with open(file_path,mode="r",encoding="utf-8") as f:
+        with open(file_path, mode="r", encoding="utf-8") as f:
             papers_info = json.load(f)
-    except (FileNotFoundError,json.JSONDecodeError):
+    except (FileNotFoundError, json.JSONDecodeError):
         print("init papers_info to empty {}")
         papers_info = {}
 
     paper_ids = []
-    
+
     for paper in papers:
         paper_id = paper.get_short_id()
         paper_ids.append(paper_id)
@@ -62,12 +63,11 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
             'published': str(paper.published.date())
         }
         papers_info[paper_id] = paper_info
-    
-    with open(file_path,mode="wt",encoding="utf-8") as f:
-        json.dump(papers_info,f,indent=2)
+
+    with open(file_path, mode="wt", encoding="utf-8") as f:
+        json.dump(papers_info, f, indent=2)
     print(f"Results save in {file_path.resolve()}")
     return paper_ids
-
 
 
 def extra_info(paper_id: str) -> str:
@@ -85,16 +85,11 @@ def extra_info(paper_id: str) -> str:
                 with open(target_file) as f:
                     papers_info = json.load(f)
                     if paper_id in papers_info:
-                        return json.dumps(papers_info[paper_id],indent=2)
+                        return json.dumps(papers_info[paper_id], indent=2)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 print(f"Error reading: {target_file.resolve()} \n {e}")
     return ""
 
-# define tool mapping
-mapping_tool_function = {
-    "search_pages": search_pages,
-    "extra_info": extra_info,
-}
 
 # define tool schema pass to llm
 tool_schema = [
@@ -139,9 +134,34 @@ tool_schema = [
     }
 ]
 
-"""Step 02
-define how to invoke llm
+"""Step 02 Execute tools
 """
+# define tool mapping
+mapping_tool_function = {
+    "search_pages": search_pages,
+    "extra_info": extra_info,
+}
+
+
+def execute_tool(tool: str,tool_args: str) -> str:
+    kwargs = json.loads(tools_args)
+    result = mapping_tool_function[tool](**kwargs)
+    
+    if result is None:
+        return "The operation completed but didn't return any results"
+    elif isinstance(result,list):
+        return ', '.join(result)
+    elif isinstance(result,dict):
+        return json.dumps(result,indent = 2)
+    else:
+        # For any other type,converting to str
+        return str(result)
+
+
+"""Step 03
+Define how to invoke llm
+"""
+
 
 # define function to invoke the LLM
 def invoke_llm(messages):
@@ -157,35 +177,44 @@ def invoke_llm(messages):
     )
     return response.choices[0].message
 
+
 client = OpenAI(
     api_key=os.environ.get('DEEPSEEK_API_KEY'),
     base_url="https://api.deepseek.com")
 
-"""Step 03 
+"""Step 04 
 Define the chatbot
 """
 
-def parse():
-    ...
+
+# process use query
+def process(query: str):
+    msgs = [{'role': 'user', 'content': query}]
+
+    while True:
+        msg = invoke_llm(msgs)
+        if msg.tool_calls:
+            # call tool
+            print(msg.content)
+            for tool in msg.tool_calls:
+                result = execute_tool(tool.function.name, tool.function.arguments)
+                msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
+
+
+        elif msg.content:
+            print(msg.content)
+            break
+
 
 # Chat Loop
 def chat_loop():
-    print("Input queries topic or 'quit/q' to exit")
-    while (topic := input("Query> ").strip().lower()) not in {'quit','q'}:
-          ...
+    print("Input query or 'quit/q' to exit")
+    while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
+        process(query)
+        print("\n")
     else:
         print("See you next time")
-        sys.exit(0) 
+        sys.exit(0)
+
 
 chat_loop()
-
-
-
-
-
-
-
-
-
-
-
