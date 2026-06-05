@@ -1,9 +1,10 @@
 """
+A chatbot that retrieves papers from arXiv based on the topic the user inputs.
 LLM call tools
-
 implement the two tools
 """
 
+import sys
 import os
 import json
 from pathlib import Path
@@ -11,6 +12,11 @@ import arxiv
 from openai import OpenAI
 
 PAPERS_DIR="papers"
+
+
+"""Step 01
+define tool functions ,tool schema, tool mapping
+"""
 
 # define two function tools
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
@@ -64,7 +70,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
 
 
 
-def extra_info(paper_id: str):
+def extra_info(paper_id: str) -> str:
     """
     Search for information about a specific paper across all topic directories.
     Args:
@@ -82,6 +88,7 @@ def extra_info(paper_id: str):
                         return json.dumps(papers_info[paper_id],indent=2)
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 print(f"Error reading: {target_file.resolve()} \n {e}")
+    return ""
 
 # define tool mapping
 mapping_tool_function = {
@@ -132,9 +139,11 @@ tool_schema = [
     }
 ]
 
+"""Step 02
+define how to invoke llm
+"""
 
 # define function to invoke the LLM
-
 def invoke_llm(messages):
     """
     Endpoint: /chat/completions
@@ -148,24 +157,35 @@ def invoke_llm(messages):
     )
     return response.choices[0].message
 
-
-# using the new OpenAI API https://developers.openai.com/api/docs/guides/function-calling
-def invoke_llm_with_new_api(messages):
-    """error in deepseek
-    end point: /responses
-    Not support in deepseek
-    """
-    response = client.responses.create(
-        model="deepseek-v4-pro",
-        input=messages
-    )
-    return response
-
-
 client = OpenAI(
     api_key=os.environ.get('DEEPSEEK_API_KEY'),
     base_url="https://api.deepseek.com")
 
-msgs = [{'role': 'user', 'content': '你能使用工具?'}]
-#response = invoke_llm(msgs)
-#print(response.model_dump_json(indent=2))
+"""Step 03 
+Define the chatbot
+"""
+
+def parse():
+    ...
+
+# Chat Loop
+def chat_loop():
+    print("Input queries topic or 'quit/q' to exit")
+    while (topic := input("Query> ").strip().lower()) not in {'quit','q'}:
+          ...
+    else:
+        print("See you next time")
+        sys.exit(0) 
+
+chat_loop()
+
+
+
+
+
+
+
+
+
+
+
