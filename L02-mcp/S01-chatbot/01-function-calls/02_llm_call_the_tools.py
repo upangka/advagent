@@ -6,7 +6,7 @@ implement the two tools
 
 import os
 import json
-
+from pathlib import Path
 import arxiv
 from openai import OpenAI
 
@@ -29,8 +29,37 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
                 sort_by=arxiv.SortCriterion.Relevance
             )
     papers = client.results(search_req)
-    print(list(papers))
+    
+    # store to json file
+    path = Path("../papers") / (topic.replace(" ","_"))
+    path.mkdir(exist_ok=True,parents=True)
+    file_path = path / "papers_info.json"
+    # load original paper info
+    try:
+        with open(file_path,mode="r",encoding="utf-8") as f:
+            papers_info = json.load(f)
+    except (FileNotFoundError,json.JSONDecodeError):
+        print("init papers_info to empty {}")
+        papers_info = {}
 
+    paper_ids = []
+    
+    for paper in papers:
+        paper_id = paper.get_short_id()
+        paper_ids.append(paper_id)
+        paper_info = {
+            'title': paper.title,
+            'authors': [author.name for author in paper.authors],
+            'summary': paper.summary,
+            'pdf_url': paper.pdf_url,
+            'published': str(paper.published.date())
+        }
+        papers_info[paper_id] = paper_info
+    
+    with open(file_path,mode="wt",encoding="utf-8") as f:
+        json.dump(papers_info,f,indent=2)
+    print(f"Results save in {file_path.resolve()}")
+    return paper_ids
 
 
 
