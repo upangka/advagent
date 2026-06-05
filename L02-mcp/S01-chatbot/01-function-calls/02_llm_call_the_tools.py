@@ -10,6 +10,7 @@ from pathlib import Path
 import arxiv
 from openai import OpenAI
 
+PAPERS_DIR="papers"
 
 # define two function tools
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
@@ -31,7 +32,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     papers = client.results(search_req)
     
     # store to json file
-    path = Path("../papers") / (topic.replace(" ","_"))
+    path = Path(f"../{PAPERS_DIR}") / (topic.replace(" ","_"))
     path.mkdir(exist_ok=True,parents=True)
     file_path = path / "papers_info.json"
     # load original paper info
@@ -69,8 +70,18 @@ def extra_info(paper_id: str):
     Args:
         paper_id: The ID of the paper to look for
     """
-    ...
+    path = Path(f"../{PAPERS_DIR}")
 
+    for item in path.iterdir():
+        if item.is_dir():
+            target_file = item / "papers_info.json"
+            try:
+                with open(target_file) as f:
+                    papers_info = json.load(f)
+                    if paper_id in papers_info:
+                        return json.dumps(papers_info[paper_id],indent=2)
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error reading: {target_file.resolve()} \n {e}")
 
 # define tool mapping
 mapping_tool_function = {
