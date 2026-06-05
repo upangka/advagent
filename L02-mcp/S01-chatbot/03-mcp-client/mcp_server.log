@@ -1,0 +1,4 @@
+2026-06-05 22:42:05,875 - INFO - Starting MCP Server... at 2026-06-05 22:42:05
+2026-06-05 22:42:05,885 - INFO - Processing request of type ListToolsRequest
+2026-06-05 22:42:20,151 - INFO - Processing request of type CallToolRequest
+2026-06-05 22:42:20,151 - INFO - Searching for information about a specific paper: 1710.03211v2
