@@ -42,7 +42,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= max_results if max_results < 5 else 5,
+        max_results= min(max_results,5), 
         sort_by=arxiv.SortCriterion.Relevance
     )
     
@@ -101,134 +101,6 @@ def extra_info(paper_id: str) -> str:
                 print(f"Error reading: {target_file.resolve()} \n {e}")
     return ""
 
-
-# define tool schema pass to llm
-tool_schema = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_pages",
-            "description": "Search for papers on arXiv based on a topic and store their information.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "topic": {
-                        "type": "string",
-                        "description": "The topic to search for",
-                    },
-                    "max_results": {
-                        "type": "integer",
-                        "description": "Maximum number of results to retrieve",
-                        "default": 5
-                    }
-                },
-                "required": ["topic"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "extra_info",
-            "description": "Search for information about a specific paper across all topic directories.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "paper_id": {
-                        "type": "string",
-                        "description": "The ID of the paper to look for",
-                    }
-                },
-                "required": ["paper_id"]
-            },
-        }
-    }
-]
-
-"""Step 02 Execute tools
-"""
-# define tool mapping
-mapping_tool_function = {
-    "search_pages": search_pages,
-    "extra_info": extra_info,
-}
-
-
-def execute_tool(tool: str,tool_args: str) -> str:
-    kwargs = json.loads(tool_args)
-    print(f'{"*"*3} 正在调用... {tool} 参数为{tool_args} {"*"*3} ')
-    result = mapping_tool_function[tool](**kwargs)
-    
-    if result is None:
-        return "The operation completed but didn't return any results"
-    elif isinstance(result,list):
-        return ', '.join(result)
-    elif isinstance(result,dict):
-        return json.dumps(result,indent = 2)
-    else:
-        # For any other type,converting to str
-        return str(result)
-
-
-"""Step 03
-Define how to invoke llm
-"""
-
-# define function to invoke the LLM
-def invoke_llm(messages):
-    """
-    Endpoint: /chat/completions
-    Supported in DeepSeek.
-    """
-    response = client.chat.completions.create(
-        model="deepseek-v4-flash",
-        messages=messages,
-        tools=tool_schema,  # bind tools
-        extra_body={"thinking": {"type": "disabled"}}
-    )
-    return response.choices[0].message
-
-
-client = OpenAI(
-    api_key=os.environ.get('DEEPSEEK_API_KEY'),
-    base_url="https://api.deepseek.com")
-
-"""Step 04 
-Define the chatbot
-"""
-
-
-# process use query
-def process(query: str):
-    msgs = [
-            {'role': 'system','content': '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
-            {'role': 'user', 'content': query}]
-
-    while True:
-        msg = invoke_llm(msgs)
-        if msg.tool_calls:
-            print(msg.content)
-            # Keep the tool calls info that AI will invoke
-            msgs.append(msg)
-
-            # call the tool
-            for tool in msg.tool_calls:
-                result = execute_tool(tool.function.name, tool.function.arguments)
-                msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
-        elif msg.content:
-            print(msg.content)
-            break
-
-
-# Chat Loop
-def chat_loop():
-    print("Input query or 'quit/q' to exit")
-    while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
-        process(query)
-        print("\n")
-    else:
-        print("See you next time")
-        sys.exit(0)
-
+# uv run mcp dev chatbot_mcp_server.py
 if __name__ == '__main__':
-    chat_loop()
+    mcp.run(transport='stdio')
