@@ -13,12 +13,11 @@ from mcp.server.fastmcp import FastMCP
 
 # 配置日志记录到文件
 logging.basicConfig(
-    filename='mcp_server.log',
+    filename='paper_research_mcp_server.log',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
 PAPERS_DIR = "papers"
 
 

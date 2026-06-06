@@ -57,7 +57,18 @@ class McpChatBot:
             print("See you next time")
             sys.exit(0)
 
-    async def connect_to_server_and_run(self):
+
+    async def connect_to_servers(self):
+        with open("server_config.json") as f:
+            mcp_servers_config = json.load(f)
+        
+        servers = mcp_servers_config.get('mcpServers',{})
+        for server_name,server_config in servers.items():
+            print(f"connecting to {server_name}")
+        
+
+    async def connect_to_server(config: dict):
+        ...
         server_params = StdioServerParameters(
             command='uv',
             args=['run', 'chatbot_mcp_server.py'],
@@ -89,14 +100,15 @@ class McpChatBot:
                     }
                 } for tool in response.tools]
 
-                await self.chat_loop()
-                # import json
-                # print(json.dumps(self.available_tools,indent=2))
-
 
 async def main():
-    chat_bot = McpChatBot()
-    await chat_bot.connect_to_server_and_run()
+    try:
+        chat_bot = McpChatBot()
+        await chat_bot.connect_to_servers()
+        #await self.chat_loop()
+    finally:
+        # clean extranel resources
+        pass
 
 
 if __name__ == '__main__':
