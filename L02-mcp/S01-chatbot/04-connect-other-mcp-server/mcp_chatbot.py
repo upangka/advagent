@@ -123,7 +123,7 @@ async def main():
         await chat_bot.connect_to_servers()
         # await self.chat_loop()
     finally:
-        # clean extranel resources
+        # clean external resources
         await chat_bot.cleanup()
 
 
