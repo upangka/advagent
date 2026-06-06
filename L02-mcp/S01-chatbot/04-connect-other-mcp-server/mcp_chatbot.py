@@ -46,7 +46,12 @@ class McpChatBot:
 
                 # call the tool
                 for tool in msg.tool_calls:
-                    result = await self.session.call_tool(tool.function.name, json.loads(tool.function.arguments))
+                    tool_name = tool.function.name
+                    kwargs = json.loads(tool.function.arguments)
+                    print(f"Calling tool: {tool_name} with args: {kwargs}")
+
+                    session = self.tool_to_session[tool_name]
+                    result = await session.call_tool(tool_name, kwargs)
                     msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
             elif msg.content:
                 print(msg.content)
@@ -121,7 +126,7 @@ async def main():
     try:
         chat_bot = McpChatBot()
         await chat_bot.connect_to_servers()
-        # await self.chat_loop()
+        await chat_bot.chat_loop()
     finally:
         # clean external resources
         await chat_bot.cleanup()
