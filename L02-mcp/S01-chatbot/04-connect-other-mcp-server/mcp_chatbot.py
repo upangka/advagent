@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import sys
+from contextlib import AsyncExitStack
 
 from mcp import StdioServerParameters, stdio_client, ClientSession
 from openai import OpenAI
@@ -9,8 +10,9 @@ from openai import OpenAI
 
 class McpChatBot:
     def __init__(self):
-        self.session: ClientSession = None
+        self.sessions: list[ClientSession] = []
         self.available_tools: list[dict] = []
+        self.exit_stack = AsyncExitStack()
         self.client = OpenAI(
             api_key=os.environ.get('DEEPSEEK_API_KEY'),
             base_url="https://api.deepseek.com")
@@ -57,58 +59,61 @@ class McpChatBot:
             print("See you next time")
             sys.exit(0)
 
-
     async def connect_to_servers(self):
+        """Connect to all configured MCP Servers"""
+
         with open("server_config.json") as f:
             mcp_servers_config = json.load(f)
-        
-        servers = mcp_servers_config.get('mcpServers',{})
-        for server_name,server_config in servers.items():
-            print(f"connecting to {server_name}")
-        
 
-    async def connect_to_server(config: dict):
-        ...
-        server_params = StdioServerParameters(
-            command='uv',
-            args=['run', 'chatbot_mcp_server.py'],
-            env=None
-        )
+        servers = mcp_servers_config.get('mcpServers', {})
+        for server_name, config in servers.items():
+            await self.connect_to_server(server_name, config)
 
-        # Launch the server as subprocess & returns the read/write streams
-        # read: the stream that client will use to read msgs from the server
-        # write: the stream that client will use to write msgs to the server
-        async with stdio_client(server_params) as (read, write):
-            # The client session is used to initialize the connection
-            # and send request to the server
-            async with ClientSession(read, write) as session:
-                self.session = session
-                # Initialize the connection(1:1 connection with the server)
-                await session.initialize()
+        with open('tools_schema.json', mode="wt", encoding="utf-8") as f:
+            json.dump(self.available_tools, f, indent=2)
 
-                # list available tools
-                response = await session.list_tools()
-                tools = response.tools
-                print('\n Connected to server with tools: ',
-                      [tool.name for tool in tools])
-                self.available_tools = [{
-                    "type": "function",
-                    "function": {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": tool.inputSchema
-                    }
-                } for tool in response.tools]
+    async def connect_to_server(self, name: str, config: dict):
+
+        server_params = StdioServerParameters(**config)
+
+        read, write = await self.exit_stack.enter_async_context(
+            stdio_client(server_params))
+
+        session = await self.exit_stack.enter_async_context(
+            ClientSession(read, write))
+        self.sessions.append(session)
+
+        # Initialize the connection(1:1 connect with the server)
+        await session.initialize()
+
+        # list available tools
+        response = await session.list_tools()
+        tools = response.tools
+        print(f'\n Connected to {name} server with tools: ',
+              [tool.name for tool in tools])
+
+        self.available_tools.extend([{
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.inputSchema
+            }
+        } for tool in response.tools])
+
+    async def cleanup(self):
+        """Clean up all resources"""
+        await self.exit_stack.aclose()
 
 
 async def main():
     try:
         chat_bot = McpChatBot()
         await chat_bot.connect_to_servers()
-        #await self.chat_loop()
+        # await self.chat_loop()
     finally:
         # clean extranel resources
-        pass
+        await chat_bot.cleanup()
 
 
 if __name__ == '__main__':
