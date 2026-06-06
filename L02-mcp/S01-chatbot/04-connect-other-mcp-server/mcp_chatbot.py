@@ -16,6 +16,8 @@ class McpChatBot:
         self.client = OpenAI(
             api_key=os.environ.get('DEEPSEEK_API_KEY'),
             base_url="https://api.deepseek.com")
+        # bind tool to session
+        self.tool_to_session: dict[str,ClientSession] = {}
 
     async def invoke_llm(self, messages):
         """
@@ -60,7 +62,10 @@ class McpChatBot:
             sys.exit(0)
 
     async def connect_to_servers(self):
-        """Connect to all configured MCP Servers"""
+        """Connect to all configured MCP Servers
+
+        Prepare MCP server-related tools
+        """
 
         with open("server_config.json") as f:
             mcp_servers_config = json.load(f)
@@ -71,6 +76,9 @@ class McpChatBot:
 
         with open('tools_schema.json', mode="wt", encoding="utf-8") as f:
             json.dump(self.available_tools, f, indent=2)
+
+        print(f"The agent has a total of {len(self.available_tools)} tools\n")
+        print("    ".join([f'({id}):{tool["function"]["name"]}' for id,tool in enumerate(self.available_tools,1)]))
 
     async def connect_to_server(self, name: str, config: dict):
 
@@ -92,14 +100,17 @@ class McpChatBot:
         print(f'\n Connected to {name} server with tools: ',
               [tool.name for tool in tools])
 
-        self.available_tools.extend([{
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.inputSchema
-            }
-        } for tool in response.tools])
+        for tool in response.tools:
+            # Prepared MCP server-related tools
+            self.tool_to_session[tool.name]=session
+            self.available_tools.append({
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.inputSchema
+                }
+            })
 
     async def cleanup(self):
         """Clean up all resources"""
