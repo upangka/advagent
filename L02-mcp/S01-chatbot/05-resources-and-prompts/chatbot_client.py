@@ -52,12 +52,12 @@ class McpChatBot:
 
     async def chat_loop(self):
         print("""
-                >>>>> MCP ChatBot start <<<<<
-                - Try your queries of 'quit/q' to exit.
-                - Use @folds to see available topic.
-                - Use @<topic> to search papers in that topic.
-                - Use /prompts to list available prompts
-                - Use /prompt <name> <arg1=value> to execute a prompt""")
+>>>>> MCP ChatBot start <<<<<
+- Try your queries of 'quit/q' to exit.
+- Use @folds to see available topic.
+- Use @<topic> to search papers in that topic.
+- Use /prompts to list available prompts
+- Use /prompt <name> <arg1=value> to execute a prompt""")
 
         while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
 
