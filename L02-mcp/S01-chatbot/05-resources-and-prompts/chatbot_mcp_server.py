@@ -189,15 +189,7 @@ def get_topic_papers(topic: str) -> str:
 
 @mcp.prompt()
 def generate_search_prompt(topic: str,num_papers: int) -> str:
-    """
-    Generate a prompt for Hosts to find and discuss academic papers on a specific topic.
-    
-    Args:
-        topic: The research topic to retrieve papers for
-        num_papers: The number of papers to search
-    Returns: 
-        formatted prompt
-    """
+    """Generate a prompt for Hosts to find and discuss academic papers on a specific topic."""
 
     return f"""使用 search_papers 工具搜索关于 '{topic}' 的 {num_papers} 篇学术论文。请按照以下指示操作：
     1. 首先，使用 search_papers(topic='{topic}', max_results={num_papers}) 搜索论文。

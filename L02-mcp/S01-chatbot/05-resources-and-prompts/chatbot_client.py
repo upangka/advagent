@@ -9,8 +9,10 @@ from openai import OpenAI
 
 class McpChatBot:
     def __init__(self):
-        self.session: ClientSession = None
+        self.sessions: dict[str, ClientSession] = {}
+        # Compatible with OpenAI tool schema
         self.available_tools: list[dict] = []
+        self.available_prompts: list[dict] = []
         self.client = OpenAI(
             api_key=os.environ.get('DEEPSEEK_API_KEY'),
             base_url="https://api.deepseek.com")
@@ -49,8 +51,21 @@ class McpChatBot:
                 break
 
     async def chat_loop(self):
-        print("Input query or 'quit/q' to exit")
+        print("""
+                >>>>> MCP ChatBot start <<<<<
+                - Try your queries of 'quit/q' to exit.
+                - Use @folds to see available topic.
+                - Use @<topic> to search papers in that topic.
+                - Use /prompts to list available prompts
+                - Use /prompt <name> <arg1=value> to execute a prompt""")
+
         while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
+
+            if query.startswith("/"):
+                if query == '/prompts':
+                    await self.list_prompts()
+                continue
+
             await self.process(query)
             print("\n")
         else:
@@ -80,23 +95,48 @@ class McpChatBot:
                 tools = response.tools
                 print('\n Connected to server with tools: ',
                       [tool.name for tool in tools])
-                self.available_tools = [{
-                    "type": "function",
-                    "function": {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": tool.inputSchema
-                    }
-                } for tool in response.tools]
 
-                await self.chat_loop()
-                # import json
-                # print(json.dumps(self.available_tools,indent=2))
+                for tool in response.tools:
+                    self.sessions[tool.name] = session
+                    self.available_tools.append({
+                        "type": "function",
+                        "function": {
+                            "name": tool.name,
+                            "description": tool.description,
+                            "parameters": tool.inputSchema
+                        }
+                    })
+
+                # list available prompts
+                prompts_response = await session.list_prompts()
+                if prompts_response and prompts_response.prompts:
+                    for prompt in prompts_response.prompts:
+                        self.sessions[prompt.name] = session
+                        self.available_prompts.append({
+                            'name': prompt.name,
+                            'description': prompt.description,
+                            'arguments': prompt.arguments})
+
+    async def list_prompts(self):
+        """List all available prompt"""
+        if not self.available_prompts:
+            print("No prompts available")
+            return
+        print("\nAvailable prompts:")
+        for prompt in self.available_prompts:
+            print(f"- {prompt['name']}: {prompt['description']}")
+            if prompt['arguments']:
+                print(f"    Arguments")
+                for arg in prompt['arguments']:
+                    name = arg.name if hasattr(arg, 'name') else arg.get('name', '')
+                    if name:
+                        print(f"        - {name}")
 
 
 async def main():
     chat_bot = McpChatBot()
     await chat_bot.connect_to_server_and_run()
+    await chat_bot.chat_loop()
 
 
 if __name__ == '__main__':
