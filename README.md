@@ -1,6 +1,7 @@
 
-Happy Coding :-)
+> Older-School Coder: Happy Coding :-)
 
-# Learn Resources
 
-- [mcp build rich context ai apps with anthropi](https://learn.deeplearning.ai/courses/mcp-build-rich-context-ai-apps-with-anthropic)
+- 02 MCP
+  - [chatbot - (Mcp Build Rich Context Ai Apps With Anthropic)](L02-mcp/S01-chatbot/README.md)
+
