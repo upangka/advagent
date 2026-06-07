@@ -21,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PAPERS_DIR = "papers"
-
+PAPER_FILE_NAME = "papers_info.json"
 
 """Step 01
 Initialize an FastMCP Server
@@ -132,7 +132,8 @@ def get_available_folds():
     
     # Create a simple markdown list
     if folds:
-        for idx,topic in enumerate(folds,1):
+        for idx,fold in enumerate(folds,1):
+            topic = fold.replace('_',' ')
             content += f"{idx}. {topic}\n"
         content += f"\nUser @{topic} to access papers in that topic.\n"
     else:
@@ -145,9 +146,44 @@ def get_available_folds():
 def get_topic_papers(topic: str) -> str:
     """
     Get detail information about papers on topic
+
+    Args:
+        topic: The research topic to retrieve papers for
     """
-    print("Receive request for get_topic_papers")
-    return f"# No papers found for topic: {topic}\n"
+    logger.info(f"Receive request for get_topic_papers to get {topic}")
+    
+    topic_dir = topic.lower().replace(' ','_')
+    papers_file = Path(f"../{PAPERS_DIR}") / f"{topic_dir}/{PAPER_FILE_NAME}"
+    
+    if not papers_file.exists():
+        print(papers_file.resolve())
+        return f"No papers found for that topic: {topic}.\n\nTry searching for papers on another topic"
+
+    try:
+        with open(papers_file,mode="rt",encoding="utf-8") as f:
+            papers = json.load(f)
+        
+        # Create markdown content with paper detail
+        content = f"# Papers on {topic.replace('_',' ').title()}\n\n"
+        content += f"Total papers: {len(papers)}\n\n"
+
+        for idx,paper in papers.items():
+            content += f"## {paper['title']}\n"
+            content += f"- **Paper ID**: {idx}\n"
+            content += f"- **Authors**: {', '.join(paper['authors'])}\n"
+            content += f"- **Published**: {paper['published']}\n"
+            content += f"- **PDF URL**: [{paper['pdf_url']}]({paper['pdf_url']})\n\n"
+            content += f"> **Summary**\n> {paper['summary'][:500]}...\n\n"
+            content += f"---\n\n"
+        
+        # save result markdown
+        outdir = Path(f"../out")
+        outdir.mkdir(exist_ok=True)
+        with open(outdir / f"{topic_dir}.md",mode="wt",encoding="utf-8") as f:
+            f.write(content)
+        return content
+    except json.JSONDecodeError:
+        return f"# Error reading papers data for {topic}\n\nThe papers data file is corrupted."
 
 
 # uv run mcp dev chatbot_mcp_server.py
