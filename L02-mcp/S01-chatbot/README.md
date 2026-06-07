@@ -103,3 +103,50 @@ MCP Server测试工具inspector
 uv run mcp dev mcp_server_scriptxxxx.py
 ```
 ![stdio_inspect.png](assets/stdio_inspect.png)
+
+# Agentic应用(客户端)使用MCP提供的工具
+
+[03-mcp-client](./03-mcp-client)
+
+核心原理两步骤：
+1. 像`工具调用的基本原理`一样，首先我们需要从MCP Server中获取工具列表，绑定到模型中。
+2. 当模型需要调用工具时，通过与MCP Server进行通信，将工具调用信息发送给MCP Server，MCP Server会调用对应的工具，并返回结果。
+3. 将结果发回到模型中，模型会处理结果。
+
+
+从MCP Server中获取工具列表，处理成模型识别的schema [DeepSeek的tool_calls](https://api-docs.deepseek.com/zh-cn/guides/tool_calls)
+
+```python
+from mcp import stdio_client, ClientSession
+async with stdio_client(server_params) as (read, write):
+    async with ClientSession(read, write) as session:
+        # 与MCP Server建立连接
+        session.initialize()
+        # list available tools
+        response = await session.list_tools()
+        # 构建tool schema
+        self.available_tools = [{
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.inputSchema
+            }
+        } for tool in response.tools]
+```
+
+调用MCP Server的工具
+
+```python
+msgs = ...
+msg = await self.invoke_llm(msgs)
+if msg.tool_calls: # 模型需要调用工具
+    # Keep the tool calls info that AI will invoke
+    msgs.append(msg)
+    # call the tool
+    for tool in msg.tool_calls:
+        # 通过session调用工具
+        result = await self.session.call_tool(tool.function.name, json.loads(tool.function.arguments))
+        # 回填工具结果
+        msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
+```
