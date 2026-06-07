@@ -25,6 +25,8 @@
 - [LangChain-OpenTutorial](https://github.com/LangChain-OpenTutorial/LangChain-OpenTutorial)
 - [microsoft/langchain-for-beginners](https://github.com/microsoft/langchain-for-beginners)
 - [langchain-ai/rag-from-scratch](https://github.com/langchain-ai/rag-from-scratch)
+- [huggingface/agents-course](https://github.com/huggingface/agents-course)
+- [itheima-chain-cloud](https://gitee.com/itheima-chain-cloud)
 
 ## Github User Guys
 - [coleam00](https://github.com/coleam00)
