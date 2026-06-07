@@ -306,3 +306,45 @@ response = await session.get_prompt(prompt_name, arguments=args)
 可以发现与MCP Server的协作，无论是Resource还是Prompt，都是有两个不同的请求，可以归纳为:
 1. discovery:  获取可用的资源/prompt(展示给用户)
 2. invocation: 使用资源/prompt
+
+
+# SSE MCP
+
+[06-sse](./06-sse)
+
+## Server端处理
+
+1. 主要是创建mcp时候添加端口
+2. 启动的时候指定协议transport为sse
+
+```python
+mcp = FastMCP("mcp server name xxx",port=8001)
+mcp.run(transport='sse')
+```
+
+注意这里dev运行的时候要分别运行server和inspector
+```sh
+
+# 失效❌️ uv run mcp dev mcp_server_xxxx.py
+
+# 用下面分别启动✅️
+# 启动mcp server
+uv run python chatbot_mcp_server.py
+# 启动inspector
+npx @modelcontextprotocol/inspector
+```
+
+> 服务端启动后`http://host:port/sse` 可以查看sse(sse是http的长连接，而不是websocket)
+
+![sse.png](assets/sse.png)
+
+## Client端处理
+
+直接切换连接的客户端即可,使用`sse_client`来建立与mcp server的连接
+
+```python
+from mcp.client.sse import sse_client
+
+async with sse_client("http://127.0.0.1:8001/sse") as (read, write):
+    ...
+```
