@@ -14,7 +14,7 @@ from mcp.server.fastmcp import FastMCP
 logging.basicConfig(
     filename='mcp_server.log',
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
     encoding="utf-8"
 )
 logger = logging.getLogger(__name__)
