@@ -209,3 +209,100 @@ self.tool_to_session[tool.name]=session
 session = self.tool_to_session[tool_name]
 result = await session.call_tool(tool_name, kwargs)
 ```
+
+# Resource与Prompt
+
+[05-resources-and-prompts](./05-resources-and-prompts)
+
+## Resource
+
+`@<resource>`获取客户端提供的资源，提供给模型使用。就像通义灵码(现在叫Qoder)
+![tongyi_resource.png](assets/tongyi_resource.png)
+
+只不过这里我们是通过mcp server获取的资源，但是原理是一样的
+
+```python
+@mcp.resource("papers://folders")
+def get_available_folders():
+    ...
+
+@mcp.resource("papers://{topic}")
+def get_topic_papers(topic: str) -> str:
+   ...
+```
+这里`papers://`是资源前缀，方便客户端识别
+客户端的处理的逻辑
+```python
+# 从mcp server获取资源uri进行维护
+self.sessions: dict[str, ClientSession] = {}
+
+# 建立连接之后进行获取资源uri与session的映射关系
+resources_response = await session.list_resources()
+if resources_response and resources_response.resources:
+    for resource in resources_response.resources:
+        rs_uri = str(resource.uri)
+        self.sessions[rs_uri] = session
+```
+![resource_discovery.png](assets/resource_discovery.png)
+
+---
+
+```python
+# 处理用户要获取的资源，这里以前缀来进行处理，因为topic是动态的
+# 这里退化为统一前缀
+async def get_resource(self, resource_uri: str):
+    session = self.sessions.get(resource_uri)
+    if not session and resource_uri.startswith("papers://"):
+        for uri, sess in self.sessions.items():
+            if uri.startswith("papers://"):
+                session = sess
+                break
+    ...
+    # 确定session直接获取资源
+    response = await session.read_resource(resource_uri)
+```
+![resource_invocation.png](assets/resource_invocation.png)
+
+## Prompt
+
+MCP Server提供了prompt功能，用于生成prompt
+
+```python
+@mcp.prompt()
+def generate_search_prompt(topic: str, num_papers: int) -> str:
+    ...
+```
+
+客户端维护映射关系
+
+```python
+self.available_prompts: list[dict] = []
+
+... 
+# list available prompts
+prompts_response = await session.list_prompts()
+if prompts_response and prompts_response.prompts:
+    for prompt in prompts_response.prompts:
+        self.sessions[prompt.name] = session
+        self.available_prompts.append({
+            'name': prompt.name,
+            'description': prompt.description,
+            'arguments': prompt.arguments})
+```
+![prompt_discovery.png](assets/prompt_discovery.png)
+
+---
+
+获取具体的模版，需要填充参数
+```python
+response = await session.get_prompt(prompt_name, arguments=args)
+```
+
+![prompt_invocation.png](assets/prompt_invocation.png)
+
+
+## 小结
+
+可以发现与MCP Server的协作，无论是Resource还是Prompt，都是有两个不同的请求，可以归纳为:
+1. discovery:  获取可用的资源/prompt(展示给用户)
+2. invocation: 使用资源/prompt
