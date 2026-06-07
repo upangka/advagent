@@ -119,8 +119,18 @@ def get_available_folds():
     List all available topic folders in the papers directory.
     This resource provides a simple list of all available topic folders 
     """
-    print("Receive request for get_available_folds")
-    content = "1 No topics found.\n"
+    logger.info("Receive request for get_available_folds")
+    path = Path(f"../{PAPERS_DIR}")
+
+    folds = []
+    for topic in path.iterdir():
+        target = topic / "papers_info.json"
+        if target.exists():
+            folds.append(topic.name)
+
+    print(folds)
+
+    content = ""
 
     return content
 
@@ -137,4 +147,4 @@ def get_topic_papers(topic: str) -> str:
 # uv run mcp dev chatbot_mcp_server.py
 if __name__ == '__main__':
     logger.info(f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-    mcp.run(transport='stdio')
+    #mcp.run(transport='stdio')
