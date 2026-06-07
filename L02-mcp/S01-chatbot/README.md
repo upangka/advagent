@@ -83,3 +83,23 @@ def execute_tool(tool: str,tool_args: str) -> str:
 [02-stdio-mcp-server](./02-stdio-mcp-server)
 之前的工具都是在Agentic中定义，现在可以定义一个MCP Server，将工具单独放到MCP Server中。
 
+```python
+from mcp.server.fastmcp import FastMCP
+mcp = FastMCP("mcp server name")
+
+@mcp.tool()
+def search_pages(topic: str, max_results: int = 5) -> list[str]:
+    """工具描述"""
+    ...
+# 启动mcp server
+mcp.run(transport='stdio')
+```
+
+MCP Server测试工具inspector
+
+```shell
+# uv run python chatbot_mcp_server.py
+# npx @modelcontextprotocol/inspector
+uv run mcp dev mcp_server_scriptxxxx.py
+```
+![stdio_inspect.png](assets/stdio_inspect.png)
