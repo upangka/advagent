@@ -150,3 +150,62 @@ if msg.tool_calls: # 模型需要调用工具
         # 回填工具结果
         msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
 ```
+
+# 接入生态其他MCP Server
+
+[04-connect-other-mcp-server](./04-connect-other-mcp-server)
+
+MCP生态中提供了很多[Mcp Servers](https://github.com/modelcontextprotocol/servers)，这里提供接入方式。
+
+
+
+这里用一个json文件进行维护[server_config.json](./04-connect-other-mcp-server/server_config.json)
+这里维护的都是stido进程的启动命令，以及参数。
+```json
+{
+  "mcpServers": {
+    ...
+    "research": {
+      "command": "uv",
+      "args": [
+        "run",
+        "chatbot_mcp_server.py"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    }
+  }
+}
+```
+
+处理配置文件
+```python
+with open("server_config.json") as f:
+    mcp_servers_config = json.load(f)
+
+servers = mcp_servers_config.get('mcpServers', {})
+for server_name, config in servers.items():
+    await self.connect_to_server(server_name, config)
+```
+
+
+客户端启动的时候，维护好工具与MCP Server的映射关系（因为mcp client与mcp server是`1:1`的关系）
+![mcp_client_server.png](assets/mcp_client_server.png)
+
+维护session
+```python
+# bind tool to session
+self.tool_to_session: dict[str,ClientSession] = {}
+# connect_to_server
+self.tool_to_session[tool.name]=session
+```
+
+调用工具的时候，找到对应的session
+```python
+session = self.tool_to_session[tool_name]
+result = await session.call_tool(tool_name, kwargs)
+```
