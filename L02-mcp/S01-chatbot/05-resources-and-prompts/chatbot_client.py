@@ -30,7 +30,7 @@ class McpChatBot:
         )
         return response.choices[0].message
 
-    async def process(self, query: str):
+    async def process_query(self, query: str):
         msgs = [
             {'role': 'system', 'content': '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
             {'role': 'user', 'content': query}]
@@ -62,11 +62,19 @@ class McpChatBot:
         while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
 
             if query.startswith("/"):
-                if query == '/prompts':
+                parts = query.split()
+                command = parts[0]
+                if command == '/prompts':
                     await self.list_prompts()
+                elif command == '/prompt':
+                    if len(parts) < 3:
+                        print("Usage: /prompt <name> <arg1=value>")
+                        continue
+                    else:
+                        await self.execute_prompt()
                 continue
 
-            await self.process(query)
+            await self.process_query(query)
             print("\n")
         else:
             print("See you next time")
@@ -131,7 +139,8 @@ class McpChatBot:
                     name = arg.name if hasattr(arg, 'name') else arg.get('name', '')
                     if name:
                         print(f"        - {name}")
-
+    async def execute_prompt(self):
+        ...
 
 async def main():
     chat_bot = McpChatBot()
