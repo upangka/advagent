@@ -51,3 +51,35 @@ mapping_tool_function = {
     "extra_info": extra_info,
 }
 ```
+
+调用具体的工具函数
+```python
+# agentic与LLM沟通的核心运转
+while True:
+    msg = invoke_llm(msgs)
+    if msg.tool_calls:
+        print(msg.content)
+        # Keep the tool calls info that AI will invoke
+        msgs.append(msg)
+
+        # call the tool
+        for tool in msg.tool_calls:
+            result = execute_tool(tool.function.name, tool.function.arguments)
+            msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
+
+# 调用工具execute_tool
+def execute_tool(tool: str,tool_args: str) -> str:
+    kwargs = json.loads(tool_args)
+    print(f'{"*"*3} 正在调用... {tool} 参数为{tool_args} {"*"*3} ')
+    result = mapping_tool_function[tool](**kwargs)
+    
+    # ... 处理结果为字符串 ...
+```
+
+---
+
+# MCP Server
+
+[02-stdio-mcp-server](./02-stdio-mcp-server)
+之前的工具都是在Agentic中定义，现在可以定义一个MCP Server，将工具单独放到MCP Server中。
+
