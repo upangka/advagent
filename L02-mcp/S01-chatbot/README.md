@@ -155,9 +155,9 @@ if msg.tool_calls: # 模型需要调用工具
 
 [04-connect-other-mcp-server](./04-connect-other-mcp-server)
 
-MCP生态中提供了很多[Mcp Servers](https://github.com/modelcontextprotocol/servers)，这里提供接入方式。
+MCP生态中提供了很多[modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)，
 
-
+这里提供接入方式。
 
 这里用一个json文件进行维护[server_config.json](./04-connect-other-mcp-server/server_config.json)
 这里维护的都是stido进程的启动命令，以及参数。
@@ -209,6 +209,12 @@ self.tool_to_session[tool.name]=session
 session = self.tool_to_session[tool_name]
 result = await session.call_tool(tool_name, kwargs)
 ```
+
+## Third-party MCP Marketplace
+
+- [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)
+- [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers)
+- [mcp.so](https://mcp.so/)
 
 # Resource与Prompt
 
