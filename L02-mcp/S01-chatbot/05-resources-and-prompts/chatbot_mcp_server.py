@@ -2,8 +2,8 @@
 Build a MCP Server expose resource and prompt
 1. resource: like http get method
 """
-import logging
 import json
+import logging
 import time
 from pathlib import Path
 
@@ -14,11 +14,10 @@ from mcp.server.fastmcp import FastMCP
 logging.basicConfig(
     filename='mcp_server.log',
     level=logging.INFO,
-format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+    format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
     encoding="utf-8"
 )
 logger = logging.getLogger(__name__)
-
 
 PAPERS_DIR = "papers"
 PAPER_FILE_NAME = "papers_info.json"
@@ -29,12 +28,12 @@ Initialize an FastMCP Server
 
 mcp = FastMCP("research arxiv")
 
-
 """Step 02
 Decorating the function with @mcp.tool().
 FastMCP automatically generates the necessary MCP Schema base 
 on type hints and doc-strings.
 """
+
 
 @mcp.tool()
 def search_papers(topic: str, max_results: int = 5) -> list[str]:
@@ -48,13 +47,13 @@ def search_papers(topic: str, max_results: int = 5) -> list[str]:
     logger.info(f"Searching for papers on arXiv based on topic: {topic}")
     client = arxiv.Client()
 
-        # build search request
+    # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= min(max_results,5), 
+        max_results=min(max_results, 5),
         sort_by=arxiv.SortCriterion.Relevance
     )
-    
+
     print(f"查询的论文数量{search_req.max_results}")
     papers = client.results(search_req)
 
@@ -89,6 +88,7 @@ def search_papers(topic: str, max_results: int = 5) -> list[str]:
     logger.info(f"Results save in {file_path.resolve()}")
     return paper_ids
 
+
 @mcp.tool()
 def extra_info(paper_id: str) -> str:
     """
@@ -112,7 +112,6 @@ def extra_info(paper_id: str) -> str:
     return ""
 
 
-
 @mcp.resource("papers://folders")
 def get_available_folders():
     """
@@ -129,15 +128,15 @@ def get_available_folders():
             folds.append(topic.name)
 
     content = "# Available Topic\n\n"
-    
+
     # Create a simple markdown list
     if folds:
-        for idx,folder in enumerate(folds,1):
+        for idx, folder in enumerate(folds, 1):
             content += f"{idx}. {folder}\n"
-        content +=f"\nUse @{folder} to access papers in that topic.\n"  # noqa: F823
+        content += f"\nUse @{folder} to access papers in that topic.\n"  # noqa: F823
     else:
-        content += "No topics found.\n" 
-    
+        content += "No topics found.\n"
+
     return content
 
 
@@ -151,23 +150,23 @@ def get_topic_papers(topic: str) -> str:
 
     """
     logger.info(f"Receive request for get_topic_papers to get {topic}")
-    
-    topic_dir = topic.lower().replace(' ','_')
+
+    topic_dir = topic.lower().replace(' ', '_')
     papers_file = Path(f"../{PAPERS_DIR}") / f"{topic_dir}/{PAPER_FILE_NAME}"
-    
+
     if not papers_file.exists():
         print(papers_file.resolve())
         return f"No papers found for that topic: {topic}.\n\nTry searching for papers on another topic"
 
     try:
-        with open(papers_file,mode="rt",encoding="utf-8") as f:
+        with open(papers_file, mode="rt", encoding="utf-8") as f:
             papers = json.load(f)
-        
+
         # Create markdown content with paper detail
-        content = f"# Papers on {topic.replace('_',' ').title()}\n\n"
+        content = f"# Papers on {topic.replace('_', ' ').title()}\n\n"
         content += f"Total papers: {len(papers)}\n\n"
 
-        for idx,paper in papers.items():
+        for idx, paper in papers.items():
             content += f"## {paper['title']}\n"
             content += f"- **Paper ID**: {idx}\n"
             content += f"- **Authors**: {', '.join(paper['authors'])}\n"
@@ -175,11 +174,11 @@ def get_topic_papers(topic: str) -> str:
             content += f"- **PDF URL**: [{paper['pdf_url']}]({paper['pdf_url']})\n\n"
             content += f"> **Summary**\n> {paper['summary'][:500]}...\n\n"
             content += f"---\n\n"
-        
+
         # save result markdown
         outdir = Path(f"../out")
         outdir.mkdir(exist_ok=True)
-        with open(outdir / f"{topic_dir}.md",mode="wt",encoding="utf-8") as f:
+        with open(outdir / f"{topic_dir}.md", mode="wt", encoding="utf-8") as f:
             f.write(content)
         return content
     except json.JSONDecodeError:
@@ -187,7 +186,7 @@ def get_topic_papers(topic: str) -> str:
 
 
 @mcp.prompt()
-def generate_search_prompt(topic: str,num_papers: int) -> str:
+def generate_search_prompt(topic: str, num_papers: int) -> str:
     """Generate a prompt for Hosts to find and discuss academic papers on a specific topic."""
 
     return f"""使用 search_papers 工具搜索关于 '{topic}' 的 {num_papers} 篇学术论文。请按照以下指示操作：

@@ -1,8 +1,9 @@
 import asyncio
 import json
+import logging
 import os
 import sys
-import logging
+
 from mcp import StdioServerParameters, stdio_client, ClientSession
 from openai import OpenAI
 
@@ -13,6 +14,7 @@ logging.basicConfig(
     encoding="utf-8"
 )
 logger = logging.getLogger(__name__)
+
 
 class McpChatBot:
     def __init__(self):
@@ -82,13 +84,13 @@ class McpChatBot:
                         args = {}
                         for arg in parts[2:]:
                             if '=' in arg:
-                                key,value=arg.split('=',1)
-                                args.update({key:value})
-                        await self.execute_prompt(parts[1],args)
+                                key, value = arg.split('=', 1)
+                                args.update({key: value})
+                        await self.execute_prompt(parts[1], args)
                 continue
             # Handle resources
             elif query.startswith("@"):
-                resource_uri = f"papers://{query[1:].lower().replace(' ','_')}"
+                resource_uri = f"papers://{query[1:].lower().replace(' ', '_')}"
                 await self.get_resource(resource_uri)
                 continue
             # Handle query
@@ -166,7 +168,8 @@ class McpChatBot:
                     name = arg.name if hasattr(arg, 'name') else arg.get('name', '')
                     if name:
                         print(f"        - {name}")
-    async def execute_prompt(self,prompt_name: str,args: dict):
+
+    async def execute_prompt(self, prompt_name: str, args: dict):
         """
         Example:
             /prompt generate_search_prompt topic=深圳 num_papers=3
@@ -176,12 +179,12 @@ class McpChatBot:
             print(f"Prompt '{prompt_name}' not found")
             return
         try:
-            response = await session.get_prompt(prompt_name,arguments=args)
+            response = await session.get_prompt(prompt_name, arguments=args)
             prompt_content = response.messages[0].content
 
-            if isinstance(prompt_content,str):
+            if isinstance(prompt_content, str):
                 text = prompt_content
-            elif hasattr(prompt_content,'text'):
+            elif hasattr(prompt_content, 'text'):
                 text = prompt_content.text
             else:
                 # other object to parse text...
@@ -190,11 +193,12 @@ class McpChatBot:
             await self.process_query(text)
         except Exception as e:
             print(f"Error executing prompt '{prompt_name}': {e.args}")
-    async def get_resource(self,resource_uri: str):
+
+    async def get_resource(self, resource_uri: str):
         session = self.sessions.get(resource_uri)
         # handle paper resources
         if not session and resource_uri.startswith("papers://"):
-            for uri,sess in self.sessions.items():
+            for uri, sess in self.sessions.items():
                 if uri.startswith("papers://"):
                     session = sess
                     break
