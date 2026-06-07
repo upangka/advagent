@@ -61,13 +61,14 @@ class McpChatBot:
         print("""
 >>>>> MCP ChatBot start <<<<<
 - Try your queries of 'quit/q' to exit.
-- Use @folds to see available topic.
+- Use @folders to see available topic.
 - Use @<topic> to search papers in that topic.
 - Use /prompts to list available prompts
 - Use /prompt <name> <arg1=value> to execute a prompt""")
 
         while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
 
+            # Handle prompts
             if query.startswith("/"):
                 parts = query.split()
                 command = parts[0]
@@ -85,7 +86,12 @@ class McpChatBot:
                                 args.update({key:value})
                         await self.execute_prompt(parts[1],args)
                 continue
-
+            # Handle resources
+            elif query.startswith("@"):
+                resource_uri = f"papers://{query[1:].lower().replace(' ','_')}"
+                await self.get_resource(resource_uri)
+                continue
+            # Handle query
             await self.process_query(query)
             print("\n")
         else:
@@ -136,6 +142,14 @@ class McpChatBot:
                             'name': prompt.name,
                             'description': prompt.description,
                             'arguments': prompt.arguments})
+
+                # list available resources
+                resources_response = await session.list_resources()
+                if resources_response and resources_response.resources:
+                    for resource in resources_response.resources:
+                        rs_uri = str(resource.uri)
+                        self.sessions[rs_uri] = session
+                # run the chat loop
                 await self.chat_loop()
 
     async def list_prompts(self):
@@ -176,6 +190,28 @@ class McpChatBot:
             await self.process_query(text)
         except Exception as e:
             print(f"Error executing prompt '{prompt_name}': {e.args}")
+    async def get_resource(self,resource_uri: str):
+        session = self.sessions.get(resource_uri)
+        # handle paper resources
+        if not session and resource_uri.startswith("papers://"):
+            for uri,sess in self.sessions.items():
+                if uri.startswith("papers://"):
+                    session = sess
+                    break
+        if not session:
+            print(f"Resource '{resource_uri}' not found")
+            return
+        try:
+            response = await session.read_resource(resource_uri)
+            if response and response.contents:
+                print(f"Resource for: {resource_uri}")
+                print("Content: ")
+                print(response.contents[0].text)
+            else:
+                print("No resources available")
+        except Exception as e:
+            print(f"Error reading resource '{resource_uri}': {e.args}")
+
 
 async def main():
     chat_bot = McpChatBot()

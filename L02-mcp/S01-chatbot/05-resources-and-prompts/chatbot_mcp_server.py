@@ -59,7 +59,7 @@ def search_papers(topic: str, max_results: int = 5) -> list[str]:
     papers = client.results(search_req)
 
     # store to json file
-    path = Path(f"../{PAPERS_DIR}") / (topic.replace(" ", "_"))
+    path = Path(f"../{PAPERS_DIR}") / (topic.lower().replace(" ", "_"))
     path.mkdir(exist_ok=True, parents=True)
     file_path = path / "papers_info.json"
     # load original paper info
@@ -113,7 +113,7 @@ def extra_info(paper_id: str) -> str:
 
 
 
-@mcp.resource("paper://folders")
+@mcp.resource("papers://folders")
 def get_available_folds():
     """
     List all available topic folders in the papers directory.
@@ -142,7 +142,7 @@ def get_available_folds():
     return content
 
 
-@mcp.resource("paper://{topic}")
+@mcp.resource("papers://{topic}")
 def get_topic_papers(topic: str) -> str:
     """
     Get detail information about papers on topic
