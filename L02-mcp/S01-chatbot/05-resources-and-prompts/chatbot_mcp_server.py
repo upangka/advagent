@@ -2,11 +2,9 @@
 Build a MCP Server expose resource and prompt
 1. resource: like http get method
 """
-
-import json
 import logging
+import json
 import time
-
 from pathlib import Path
 
 import arxiv
@@ -16,9 +14,11 @@ from mcp.server.fastmcp import FastMCP
 logging.basicConfig(
     filename='mcp_server.log',
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    encoding="utf-8"
 )
 logger = logging.getLogger(__name__)
+
 
 PAPERS_DIR = "papers"
 PAPER_FILE_NAME = "papers_info.json"
@@ -37,7 +37,7 @@ on type hints and doc-strings.
 """
 
 @mcp.tool()
-def search_pages(topic: str, max_results: int = 5) -> list[str]:
+def search_papers(topic: str, max_results: int = 5) -> list[str]:
     """
     Search for papers on arXiv based on a topic and store their information.
     Args:

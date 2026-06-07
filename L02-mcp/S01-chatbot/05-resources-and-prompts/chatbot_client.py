@@ -2,10 +2,17 @@ import asyncio
 import json
 import os
 import sys
-
+import logging
 from mcp import StdioServerParameters, stdio_client, ClientSession
 from openai import OpenAI
 
+logging.basicConfig(
+    filename='mcp_client.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    encoding="utf-8"
+)
+logger = logging.getLogger(__name__)
 
 class McpChatBot:
     def __init__(self):
@@ -67,11 +74,16 @@ class McpChatBot:
                 if command == '/prompts':
                     await self.list_prompts()
                 elif command == '/prompt':
-                    if len(parts) < 3:
-                        print("Usage: /prompt <name> <arg1=value>")
+                    if len(parts) < 2:
+                        print("Usage: /prompt <name> <arg1=value1> <arg2=value2>")
                         continue
                     else:
-                        await self.execute_prompt()
+                        args = {}
+                        for arg in parts[2:]:
+                            if '=' in arg:
+                                key,value=arg.split('=',1)
+                                args.update({key:value})
+                        await self.execute_prompt(parts[1],args)
                 continue
 
             await self.process_query(query)
@@ -124,6 +136,7 @@ class McpChatBot:
                             'name': prompt.name,
                             'description': prompt.description,
                             'arguments': prompt.arguments})
+                await self.chat_loop()
 
     async def list_prompts(self):
         """List all available prompt"""
@@ -139,13 +152,34 @@ class McpChatBot:
                     name = arg.name if hasattr(arg, 'name') else arg.get('name', '')
                     if name:
                         print(f"        - {name}")
-    async def execute_prompt(self):
-        ...
+    async def execute_prompt(self,prompt_name: str,args: dict):
+        """
+        Example:
+            /prompt generate_search_prompt topic=深圳 num_papers=3
+        """
+        session = self.sessions.get(prompt_name)
+        if not session:
+            print(f"Prompt '{prompt_name}' not found")
+            return
+        try:
+            response = await session.get_prompt(prompt_name,arguments=args)
+            prompt_content = response.messages[0].content
+
+            if isinstance(prompt_content,str):
+                text = prompt_content
+            elif hasattr(prompt_content,'text'):
+                text = prompt_content.text
+            else:
+                # other object to parse text...
+                pass
+                return
+            await self.process_query(text)
+        except Exception as e:
+            print(f"Error executing prompt '{prompt_name}': {e.args}")
 
 async def main():
     chat_bot = McpChatBot()
     await chat_bot.connect_to_server_and_run()
-    await chat_bot.chat_loop()
 
 
 if __name__ == '__main__':
