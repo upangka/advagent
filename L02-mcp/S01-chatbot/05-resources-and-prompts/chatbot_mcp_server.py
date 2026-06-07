@@ -149,6 +149,7 @@ def get_topic_papers(topic: str) -> str:
 
     Args:
         topic: The research topic to retrieve papers for
+
     """
     logger.info(f"Receive request for get_topic_papers to get {topic}")
     
@@ -186,7 +187,42 @@ def get_topic_papers(topic: str) -> str:
         return f"# Error reading papers data for {topic}\n\nThe papers data file is corrupted."
 
 
+@mcp.prompt()
+def generate_search_prompt(topic: str,num_papers: int) -> str:
+    """
+    Generate a prompt for Hosts to find and discuss academic papers on a specific topic.
+    
+    Args:
+        topic: The research topic to retrieve papers for
+        num_papers: The number of papers to search
+    Returns: 
+        formatted prompt
+    """
+
+    return f"""使用 search_papers 工具搜索关于 '{topic}' 的 {num_papers} 篇学术论文。请按照以下指示操作：
+    1. 首先，使用 search_papers(topic='{topic}', max_results={num_papers}) 搜索论文。
+    
+    2. 对于找到的每一篇论文，提取并整理以下信息：
+       - 论文标题
+       - 作者
+       - 发表日期
+       - 关键发现简述
+       - 主要贡献或创新点
+       - 使用的方法论
+       - 与主题 '{topic}' 的相关性
+    
+    3. 提供一份综合总结，内容包括：
+       - '{topic}' 领域的研究现状概述
+       - 多篇论文中出现的共同主题和趋势
+       - 关键的研究空白或未来研究方向
+       - 该领域中最具影响力或最重要的论文
+    
+    4. 将你的发现以清晰、结构化的格式呈现，使用标题和要点，便于阅读。
+    
+    请同时提供每篇论文的详细信息，以及对 {topic} 研究领域的高层次综合概述。"""
+
+
 # uv run mcp dev chatbot_mcp_server.py
 if __name__ == '__main__':
     logger.info(f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-    #mcp.run(transport='stdio')
+    mcp.run(transport='stdio')
