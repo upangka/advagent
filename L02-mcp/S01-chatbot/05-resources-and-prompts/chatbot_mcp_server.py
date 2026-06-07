@@ -114,7 +114,7 @@ def extra_info(paper_id: str) -> str:
 
 
 @mcp.resource("papers://folders")
-def get_available_folds():
+def get_available_folders():
     """
     List all available topic folders in the papers directory.
     This resource provides a simple list of all available topic folders 
@@ -132,10 +132,9 @@ def get_available_folds():
     
     # Create a simple markdown list
     if folds:
-        for idx,fold in enumerate(folds,1):
-            topic = fold.replace('_',' ')
-            content += f"{idx}. {topic}\n"
-        content += f"\nUser @{topic} to access papers in that topic.\n"
+        for idx,folder in enumerate(folds,1):
+            content += f"{idx}. {folder}\n"
+        content +=f"\nUse @{folder} to access papers in that topic.\n"  # noqa: F823
     else:
         content += "No topics found.\n" 
     
