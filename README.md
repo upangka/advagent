@@ -24,6 +24,7 @@
 - [langchain-ai/rag-from-scratch](https://github.com/langchain-ai/rag-from-scratch)
 - [huggingface/agents-course](https://github.com/huggingface/agents-course)
 - [itheima-chain-cloud](https://gitee.com/itheima-chain-cloud)
+- [jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days/tree/master)
 
 ## Github User Guys
 - [coleam00](https://github.com/coleam00)
