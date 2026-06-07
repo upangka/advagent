@@ -128,10 +128,16 @@ def get_available_folds():
         if target.exists():
             folds.append(topic.name)
 
-    print(folds)
-
-    content = ""
-
+    content = "# Available Topic\n\n"
+    
+    # Create a simple markdown list
+    if folds:
+        for idx,topic in enumerate(folds,1):
+            content += f"{idx}. {topic}\n"
+        content += f"\nUser @{topic} to access papers in that topic.\n"
+    else:
+        content += "No topics found.\n" 
+    
     return content
 
 
