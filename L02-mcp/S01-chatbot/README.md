@@ -1,7 +1,22 @@
-# Course Info
+
+# Info
+
+> 构建一个聊天机器人，提供查询论Arxiv论文信息的聊天机器人。
+
+目标：
+1. 从Function Call到工具拆分到MCP Server并与MCP Client的整合。（基于FastMCP）
+2. MCP Server提供工具的同时，还提供Resource和Prompt
+3. 客户端集成第三方MCP Server
+4. 构建SSE MCP Server.
 
 [Mcp Build Rich Context Ai Apps With Anthropic](https://learn.deeplearning.ai/courses/mcp-build-rich-context-ai-apps-with-anthropic)
 
+tech:
+```txt
+- OpenAI
+    - DeepSeek
+- FastMCP
+```
 
 # 工具调用的基本原理
 
