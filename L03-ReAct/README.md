@@ -16,6 +16,10 @@ ReAct: 奠定现代Agentic应用的架构，或者说算法，本质上它是利
 - [langsmith/hwchase17/react](https://smith.langchain.com/hub/hwchase17/react)
 - [langsmith/hwchase17/react-chat](https://smith.langchain.com/hub/hwchase17/react-chat)
 
+![tool_desc.pg](./attachments/tool_desc.png)
+
 # todo
 
 居然能够打印@trace
+
+https://wangwei1237.github.io/LLM_in_Action/
