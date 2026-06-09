@@ -288,3 +288,125 @@ Final Answer:
 应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。请问还有其他需要帮您查询的吗？
 ————————————————————————————————————————————————————————————
 ```
+
+---
+
+# LangChain的抽象API
+
+使用LangChain抽象的ChatModel,Tool,Message来构建ReAct循环，需要注意的是
+
+1. 工具的调用使用的是`invoke`
+2. 工具异常的时候，返回对应的`role`
+
+```python
+# 原生处理
+except Exception as e:
+    # 处理异常
+    print(f"Error occurred while executing tool {tool}: {e}")
+    msgs.append(
+        {
+            "role": "tool",
+            "tool_call_id": tool_call.id,
+            "content": str(e),
+        }
+    )
+
+# 使用LangChain的抽象API
+except Exception as e:
+    print(
+        f"    >>> Error occurred while executing {toolname}: {e}")
+    msgs.append(
+        ToolMessage(
+            content=f"[Error] Failed to execute {toolname}: {e}. Try Again",
+            tool_call_id=tool_call_id,
+        )
+    )
+```
+
+## 核心
+
+初始化客户端
+
+```python
+llm = init_chat_model(
+    "deepseek:deepseek-v4-pro",
+    temperature=0.2,
+    extra_body={"thinking": {"type": "disabled"}},
+)
+```
+
+声明工具
+
+```python
+@tool
+def apply_discount(
+    price: float, discount_tier: Literal["bronze", "silver", "gold"]
+) -> float:
+    ...
+```
+
+绑定工具
+
+```python
+llm_with_tools = llm.bind_tools(tools)
+```
+
+**ReAct Loop**
+
+```python
+msgs = [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)]
+for i in range(1, MAX_INTERRATIONS + 1):
+    msg = llm_with_tools.invoke(msgs)
+    msgs.append(msg)
+    if msg.tool_calls:
+        for tool_call in msg.tool_calls:
+            # type(tool_call) is dict
+            tool_call_id = tool_call["id"]
+            toolname = tool_call["name"]
+            toolargs = tool_call.get("args", {})
+            ...
+            tool = tools_mapping[toolname]
+            observation = tool.invoke(toolargs)
+            msgs.append(
+                ToolMessage(content=str(observation),
+                            tool_call_id=tool_call_id)
+            )
+    else:
+        return msg.content
+```
+
+## 程序运行
+
+[LangSmith运行日志](https://smith.langchain.com/public/587e0ee9-6326-41a9-b0ef-10b24c2c94eb/r)
+
+```sh
+------------------iteration<1>----------------------
+LLM Output:
+好的，我先查询 laptop 的价格，然后再应用 gold 折扣。
+    >>> Executing get_product_price(product='laptop')
+------------------iteration<2>----------------------
+LLM Output:
+已获取 laptop 的价格为 **1299.99**。现在为您应用 gold 折扣：
+    >>> Executing apply_discount(price=1299.99,discount_tier='gold)'
+------------------iteration<3>----------------------
+LLM Output:
+查询结果如下：
+
+- **商品**：Laptop
+- **原价**：$1,299.99
+- **折扣档位**：Gold
+- **折后价格**：**$1,000.99**
+
+应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。
+————————————————————————————————————————————————————————————
+Final Answer:
+查询结果如下：
+
+- **商品**：Laptop
+- **原价**：$1,299.99
+- **折扣档位**：Gold
+- **折后价格**：**$1,000.99**
+
+应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。
+————————————————————————————————————————————————————————————
+```
