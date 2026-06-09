@@ -1,5 +1,9 @@
 # Awesome Resources
 
+## Documents
+
+- [langchain](https://docs.langchain.com/oss/python/langchain/install)
+
 ## Video Courses
 
 - [(哔哩哔哩)LangChain- Agentic AI Engineering with LangChain & LangGraph](https://www.bilibili.com/video/BV1eEcKztEgK/)
