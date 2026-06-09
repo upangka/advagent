@@ -147,7 +147,8 @@ def run(question: str) -> str:
                 tool_args = tool_call.function.arguments
 
                 print(
-                    f"Calling tool: {tool} with args: {tool_args}\n\t {type(tool_args)=}\n")
+                    f"Calling tool: {tool} with args: {tool_args}\n\t {type(tool_args)=}\n"
+                )
 
                 try:
                     tool_output = execute_tool(tool, tool_args)

@@ -3,6 +3,11 @@
 ## Documents
 
 - [langchain](https://docs.langchain.com/oss/python/langchain/install)
+- [DeepSeek文档](https://api-docs.deepseek.com/zh-cn/)
+
+## Dev Tools
+
+- [LangSmith](https://smith.langchain.com/)
 
 ## Video Courses
 
@@ -19,6 +24,7 @@
 - [huggingface/agents-course](https://github.com/huggingface/agents-course)
 - [itheima-chain-cloud](https://gitee.com/itheima-chain-cloud)
 - [jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days/tree/master)
+- [LLM In Action](https://wangwei1237.github.io/LLM_in_Action/)
 
 ## Github User Guys
 
