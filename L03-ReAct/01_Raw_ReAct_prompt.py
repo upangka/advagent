@@ -10,9 +10,21 @@ from langsmith import traceable
 import inspect
 dotenv.load_dotenv()
 
-model = OpenAI(
+llm = OpenAI(
     api_key=os.environ.get('DEEPSEEK_API_KEY'),
     base_url="https://api.deepseek.com")
+
+def invoke_llm(full_prompt: str):
+    llm.chat.completions.create(
+        model="deepseek-v4-flash",
+        messages=[
+            {"role": "user", "content": full_prompt},
+        ],
+        stop="\nObservation",   # Stop World
+        stream=False,
+        reasoning_effort="high",
+        extra_body={"thinking": {"type": "enabled"}}
+)
 
 
 @traceable(run_type="tool")
@@ -80,6 +92,12 @@ Final Answer: 对原始输入问题的最终答案
 
 Question: {{question}}
 Thought: """
+
+
+@traceable(name="ReAct Loop backup DeepSeek")
+def run():
+    ...
+
 
 
 if __name__ == "__main__":
