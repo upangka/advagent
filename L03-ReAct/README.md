@@ -436,7 +436,7 @@ return agent_result["messages"][-1].content_blocks
 
 ## 程序运行
 
-[LangSmith运行日志](https://smith.langchain.com/public/cc6f2821-7c59-4642-9736-eaf044954413/r)
+[LangSmith运行日志](https://smith.langchain.com/public/ea7d8f10-b94c-43ae-807b-4d754e8cb171/r)
 
 ```python
     >>> Running agent with question: 应用gold折扣后，一台laptop的价格是多少
