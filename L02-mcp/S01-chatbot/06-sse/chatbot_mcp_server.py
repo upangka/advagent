@@ -2,6 +2,7 @@
 Build a MCP Server expose resource and prompt
 1. resource: like http get method
 """
+
 import json
 import logging
 import time
@@ -12,10 +13,10 @@ from mcp.server.fastmcp import FastMCP
 
 # 配置日志记录到文件
 logging.basicConfig(
-    filename='mcp_server.log',
+    filename="mcp_server.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-    encoding="utf-8"
+    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+    encoding="utf-8",
 )
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ PAPER_FILE_NAME = "papers_info.json"
 Initialize an FastMCP Server
 """
 
-mcp = FastMCP("research arxiv",port=8001)
+mcp = FastMCP("research arxiv", port=8001)
 
 """Step 02
 Decorating the function with @mcp.tool().
@@ -51,7 +52,7 @@ def search_papers(topic: str, max_results: int = 5) -> list[str]:
     search_req = arxiv.Search(
         query=topic,
         max_results=min(max_results, 5),
-        sort_by=arxiv.SortCriterion.Relevance
+        sort_by=arxiv.SortCriterion.Relevance,
     )
 
     print(f"查询的论文数量{search_req.max_results}")
@@ -75,11 +76,11 @@ def search_papers(topic: str, max_results: int = 5) -> list[str]:
         paper_id = paper.get_short_id()
         paper_ids.append(paper_id)
         paper_info = {
-            'title': paper.title,
-            'authors': [author.name for author in paper.authors],
-            'summary': paper.summary,
-            'pdf_url': paper.pdf_url,
-            'published': str(paper.published.date())
+            "title": paper.title,
+            "authors": [author.name for author in paper.authors],
+            "summary": paper.summary,
+            "pdf_url": paper.pdf_url,
+            "published": str(paper.published.date()),
         }
         papers_info[paper_id] = paper_info
 
@@ -116,7 +117,7 @@ def extra_info(paper_id: str) -> str:
 def get_available_folders():
     """
     List all available topic folders in the papers directory.
-    This resource provides a simple list of all available topic folders 
+    This resource provides a simple list of all available topic folders
     """
     logger.info("Receive request for get_available_folds")
     path = Path(f"../{PAPERS_DIR}")
@@ -151,7 +152,7 @@ def get_topic_papers(topic: str) -> str:
     """
     logger.info(f"Receive request for get_topic_papers to get {topic}")
 
-    topic_dir = topic.lower().replace(' ', '_')
+    topic_dir = topic.lower().replace(" ", "_")
     papers_file = Path(f"../{PAPERS_DIR}") / f"{topic_dir}/{PAPER_FILE_NAME}"
 
     if not papers_file.exists():
@@ -214,6 +215,8 @@ def generate_search_prompt(topic: str, num_papers: int) -> str:
 
 # uv run python chatbot_mcp_server.py
 # npx @modelcontextprotocol/inspector
-if __name__ == '__main__':
-    logger.info(f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-    mcp.run(transport='sse')
+if __name__ == "__main__":
+    logger.info(
+        f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}"
+    )
+    mcp.run(transport="sse")

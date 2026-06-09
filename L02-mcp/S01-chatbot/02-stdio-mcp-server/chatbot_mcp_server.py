@@ -8,9 +8,8 @@ import sys
 from pathlib import Path
 
 import arxiv
-from openai import OpenAI
 from mcp.server.fastmcp import FastMCP
-
+from openai import OpenAI
 
 PAPERS_DIR = "papers"
 
@@ -28,6 +27,7 @@ FastMCP automatically generates the necessary MCP Schema base
 on type hints and doc-strings.
 """
 
+
 @mcp.tool()
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
     """
@@ -39,13 +39,13 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     # Use arxiv to find the papers
     client = arxiv.Client()
 
-        # build search request
+    # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= min(max_results,5), 
-        sort_by=arxiv.SortCriterion.Relevance
+        max_results=min(max_results, 5),
+        sort_by=arxiv.SortCriterion.Relevance,
     )
-    
+
     print(f"查询的论文数量{search_req.max_results}")
     papers = client.results(search_req)
 
@@ -67,11 +67,11 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         paper_id = paper.get_short_id()
         paper_ids.append(paper_id)
         paper_info = {
-            'title': paper.title,
-            'authors': [author.name for author in paper.authors],
-            'summary': paper.summary,
-            'pdf_url': paper.pdf_url,
-            'published': str(paper.published.date())
+            "title": paper.title,
+            "authors": [author.name for author in paper.authors],
+            "summary": paper.summary,
+            "pdf_url": paper.pdf_url,
+            "published": str(paper.published.date()),
         }
         papers_info[paper_id] = paper_info
 
@@ -79,6 +79,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         json.dump(papers_info, f, indent=2)
     print(f"Results save in {file_path.resolve()}")
     return paper_ids
+
 
 @mcp.tool()
 def extra_info(paper_id: str) -> str:
@@ -101,6 +102,7 @@ def extra_info(paper_id: str) -> str:
                 print(f"Error reading: {target_file.resolve()} \n {e}")
     return ""
 
+
 # uv run mcp dev chatbot_mcp_server.py
-if __name__ == '__main__':
-    mcp.run(transport='stdio')
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

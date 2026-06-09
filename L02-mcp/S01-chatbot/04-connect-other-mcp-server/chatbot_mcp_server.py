@@ -5,7 +5,6 @@ Build a MCP Server exposes two tools
 import json
 import logging
 import time
-
 from pathlib import Path
 
 import arxiv
@@ -13,9 +12,9 @@ from mcp.server.fastmcp import FastMCP
 
 # 配置日志记录到文件
 logging.basicConfig(
-    filename='paper_research_mcp_server.log',
+    filename="paper_research_mcp_server.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 PAPERS_DIR = "papers"
@@ -34,6 +33,7 @@ FastMCP automatically generates the necessary MCP Schema base
 on type hints and doc-strings.
 """
 
+
 @mcp.tool()
 def search_pages(topic: str, max_results: int = 5) -> list[str]:
     """
@@ -46,13 +46,13 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     logger.info(f"Searching for papers on arXiv based on topic: {topic}")
     client = arxiv.Client()
 
-        # build search request
+    # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= min(max_results,5), 
-        sort_by=arxiv.SortCriterion.Relevance
+        max_results=min(max_results, 5),
+        sort_by=arxiv.SortCriterion.Relevance,
     )
-    
+
     print(f"查询的论文数量{search_req.max_results}")
     papers = client.results(search_req)
 
@@ -74,11 +74,11 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         paper_id = paper.get_short_id()
         paper_ids.append(paper_id)
         paper_info = {
-            'title': paper.title,
-            'authors': [author.name for author in paper.authors],
-            'summary': paper.summary,
-            'pdf_url': paper.pdf_url,
-            'published': str(paper.published.date())
+            "title": paper.title,
+            "authors": [author.name for author in paper.authors],
+            "summary": paper.summary,
+            "pdf_url": paper.pdf_url,
+            "published": str(paper.published.date()),
         }
         papers_info[paper_id] = paper_info
 
@@ -86,6 +86,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         json.dump(papers_info, f, indent=2)
     logger.info(f"Results save in {file_path.resolve()}")
     return paper_ids
+
 
 @mcp.tool()
 def extra_info(paper_id: str) -> str:
@@ -111,6 +112,8 @@ def extra_info(paper_id: str) -> str:
 
 
 # uv run mcp dev chatbot_mcp_server.py
-if __name__ == '__main__':
-    logger.info(f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-    mcp.run(transport='stdio')
+if __name__ == "__main__":
+    logger.info(
+        f"Starting MCP Server... at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}"
+    )
+    mcp.run(transport="stdio")

@@ -1,8 +1,10 @@
 """
 The basic principle of function calling
 """
-import os
+
 import json
+import os
+
 from openai import OpenAI
 
 
@@ -14,7 +16,7 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         topic: The topic to search for
         max_results: Maximum number of results to retrieve
     """
-    print(topic,max_results)
+    print(topic, max_results)
 
 
 def extra_info(paper_id: str):
@@ -49,12 +51,12 @@ tool_schema = [
                     "max_results": {
                         "type": "integer",
                         "description": "Maximum number of results to retrieve",
-                        "default": 5
-                    }
+                        "default": 5,
+                    },
                 },
-                "required": ["topic"]
+                "required": ["topic"],
             },
-        }
+        },
     },
     {
         "type": "function",
@@ -69,14 +71,15 @@ tool_schema = [
                         "description": "The ID of the paper to look for",
                     }
                 },
-                "required": ["paper_id"]
+                "required": ["paper_id"],
             },
-        }
-    }
+        },
+    },
 ]
 
 
 # define function to invoke the LLM
+
 
 def invoke_llm(messages):
     """
@@ -87,7 +90,7 @@ def invoke_llm(messages):
         model="deepseek-v4-flash",
         messages=messages,
         tools=tool_schema,  # bind tools
-        extra_body={"thinking": {"type": "disabled"}}
+        extra_body={"thinking": {"type": "disabled"}},
     )
     return response.choices[0].message
 
@@ -98,22 +101,19 @@ def invoke_llm_with_new_api(messages):
     end point: /responses
     Not support in deepseek
     """
-    response = client.responses.create(
-        model="deepseek-v4-pro",
-        input=messages
-    )
+    response = client.responses.create(model="deepseek-v4-pro", input=messages)
     return response
 
 
 client = OpenAI(
-    api_key=os.environ.get('DEEPSEEK_API_KEY'),
-    base_url="https://api.deepseek.com")
+    api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
+)
 
-msgs = [{'role': 'user', 'content': '帮我查询LLM相关的论文?'}]
+msgs = [{"role": "user", "content": "帮我查询LLM相关的论文?"}]
 msg = invoke_llm(msgs)
 print(msg)
 if msg.tool_calls:
     f = msg.tool_calls[0].function
-    print(f.name,f.arguments)
+    print(f.name, f.arguments)
     mapping_tool_function[f.name](**json.loads(f.arguments))
 # print(msg.model_dump_json(indent=2))

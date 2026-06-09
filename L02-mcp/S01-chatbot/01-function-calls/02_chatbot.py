@@ -30,13 +30,13 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
     # Use arxiv to find the papers
     client = arxiv.Client()
 
-        # build search request
+    # build search request
     search_req = arxiv.Search(
         query=topic,
-        max_results= max_results if max_results < 5 else 5,
-        sort_by=arxiv.SortCriterion.Relevance
+        max_results=max_results if max_results < 5 else 5,
+        sort_by=arxiv.SortCriterion.Relevance,
     )
-    
+
     print(f"查询的论文数量{search_req.max_results}")
     papers = client.results(search_req)
 
@@ -58,11 +58,11 @@ def search_pages(topic: str, max_results: int = 5) -> list[str]:
         paper_id = paper.get_short_id()
         paper_ids.append(paper_id)
         paper_info = {
-            'title': paper.title,
-            'authors': [author.name for author in paper.authors],
-            'summary': paper.summary,
-            'pdf_url': paper.pdf_url,
-            'published': str(paper.published.date())
+            "title": paper.title,
+            "authors": [author.name for author in paper.authors],
+            "summary": paper.summary,
+            "pdf_url": paper.pdf_url,
+            "published": str(paper.published.date()),
         }
         papers_info[paper_id] = paper_info
 
@@ -110,12 +110,12 @@ tool_schema = [
                     "max_results": {
                         "type": "integer",
                         "description": "Maximum number of results to retrieve",
-                        "default": 5
-                    }
+                        "default": 5,
+                    },
                 },
-                "required": ["topic"]
+                "required": ["topic"],
             },
-        }
+        },
     },
     {
         "type": "function",
@@ -130,10 +130,10 @@ tool_schema = [
                         "description": "The ID of the paper to look for",
                     }
                 },
-                "required": ["paper_id"]
+                "required": ["paper_id"],
             },
-        }
-    }
+        },
+    },
 ]
 
 """Step 02 Execute tools
@@ -145,17 +145,17 @@ mapping_tool_function = {
 }
 
 
-def execute_tool(tool: str,tool_args: str) -> str:
+def execute_tool(tool: str, tool_args: str) -> str:
     kwargs = json.loads(tool_args)
     print(f'{"*"*3} 正在调用... {tool} 参数为{tool_args} {"*"*3} ')
     result = mapping_tool_function[tool](**kwargs)
-    
+
     if result is None:
         return "The operation completed but didn't return any results"
-    elif isinstance(result,list):
-        return ', '.join(result)
-    elif isinstance(result,dict):
-        return json.dumps(result,indent = 2)
+    elif isinstance(result, list):
+        return ", ".join(result)
+    elif isinstance(result, dict):
+        return json.dumps(result, indent=2)
     else:
         # For any other type,converting to str
         return str(result)
@@ -164,6 +164,7 @@ def execute_tool(tool: str,tool_args: str) -> str:
 """Step 03
 Define how to invoke llm
 """
+
 
 # define function to invoke the LLM
 def invoke_llm(messages):
@@ -175,14 +176,14 @@ def invoke_llm(messages):
         model="deepseek-v4-flash",
         messages=messages,
         tools=tool_schema,  # bind tools
-        extra_body={"thinking": {"type": "disabled"}}
+        extra_body={"thinking": {"type": "disabled"}},
     )
     return response.choices[0].message
 
 
 client = OpenAI(
-    api_key=os.environ.get('DEEPSEEK_API_KEY'),
-    base_url="https://api.deepseek.com")
+    api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
+)
 
 """Step 04 
 Define the chatbot
@@ -192,8 +193,9 @@ Define the chatbot
 # process use query
 def process(query: str):
     msgs = [
-            {'role': 'system','content': '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
-            {'role': 'user', 'content': query}]
+        {"role": "system", "content": '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
+        {"role": "user", "content": query},
+    ]
 
     while True:
         msg = invoke_llm(msgs)
@@ -205,7 +207,9 @@ def process(query: str):
             # call the tool
             for tool in msg.tool_calls:
                 result = execute_tool(tool.function.name, tool.function.arguments)
-                msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
+                msgs.append(
+                    {"role": "tool", "tool_call_id": tool.id, "content": f"{result}"}
+                )
         elif msg.content:
             print(msg.content)
             break
@@ -214,12 +218,13 @@ def process(query: str):
 # Chat Loop
 def chat_loop():
     print("Input query or 'quit/q' to exit")
-    while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
+    while (query := input("Query> ").strip().lower()) not in {"quit", "q"}:
         process(query)
         print("\n")
     else:
         print("See you next time")
         sys.exit(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     chat_loop()

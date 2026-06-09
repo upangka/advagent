@@ -4,14 +4,14 @@ import logging
 import os
 import sys
 
-from mcp import StdioServerParameters, stdio_client, ClientSession
+from mcp import ClientSession, StdioServerParameters, stdio_client
 from openai import OpenAI
 
 logging.basicConfig(
-    filename='mcp_client.log',
+    filename="mcp_client.log",
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-    encoding="utf-8"
+    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+    encoding="utf-8",
 )
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,9 @@ class McpChatBot:
         self.available_tools: list[dict] = []
         self.available_prompts: list[dict] = []
         self.client = OpenAI(
-            api_key=os.environ.get('DEEPSEEK_API_KEY'),
-            base_url="https://api.deepseek.com")
+            api_key=os.environ.get("DEEPSEEK_API_KEY"),
+            base_url="https://api.deepseek.com",
+        )
 
     async def invoke_llm(self, messages):
         """
@@ -35,14 +36,18 @@ class McpChatBot:
             model="deepseek-v4-flash",
             messages=messages,
             tools=self.available_tools,  # bind tools
-            extra_body={"thinking": {"type": "disabled"}}
+            extra_body={"thinking": {"type": "disabled"}},
         )
         return response.choices[0].message
 
     async def process_query(self, query: str):
         msgs = [
-            {'role': 'system', 'content': '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的'},
-            {'role': 'user', 'content': query}]
+            {
+                "role": "system",
+                "content": '你的名字叫AxShenZ,由"鲨鱼のJavthon"开发出来的',
+            },
+            {"role": "user", "content": query},
+        ]
 
         while True:
             msg = await self.invoke_llm(msgs)
@@ -53,8 +58,16 @@ class McpChatBot:
 
                 # call the tool
                 for tool in msg.tool_calls:
-                    result = await self.session.call_tool(tool.function.name, json.loads(tool.function.arguments))
-                    msgs.append({"role": "tool", "tool_call_id": tool.id, "content": f"{result}"})
+                    result = await self.session.call_tool(
+                        tool.function.name, json.loads(tool.function.arguments)
+                    )
+                    msgs.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool.id,
+                            "content": f"{result}",
+                        }
+                    )
             elif msg.content:
                 print(msg.content)
                 break
@@ -68,23 +81,23 @@ class McpChatBot:
 - Use /prompts to list available prompts
 - Use /prompt <name> <arg1=value> to execute a prompt""")
 
-        while (query := input("Query> ").strip().lower()) not in {'quit', 'q'}:
+        while (query := input("Query> ").strip().lower()) not in {"quit", "q"}:
 
             # Handle prompts
             if query.startswith("/"):
                 parts = query.split()
                 command = parts[0]
-                if command == '/prompts':
+                if command == "/prompts":
                     await self.list_prompts()
-                elif command == '/prompt':
+                elif command == "/prompt":
                     if len(parts) < 2:
                         print("Usage: /prompt <name> <arg1=value1> <arg2=value2>")
                         continue
                     else:
                         args = {}
                         for arg in parts[2:]:
-                            if '=' in arg:
-                                key, value = arg.split('=', 1)
+                            if "=" in arg:
+                                key, value = arg.split("=", 1)
                                 args.update({key: value})
                         await self.execute_prompt(parts[1], args)
                 continue
@@ -102,9 +115,7 @@ class McpChatBot:
 
     async def connect_to_server_and_run(self):
         server_params = StdioServerParameters(
-            command='uv',
-            args=['run', 'chatbot_mcp_server.py'],
-            env=None
+            command="uv", args=["run", "chatbot_mcp_server.py"], env=None
         )
 
         # Launch the server as subprocess & returns the read/write streams
@@ -121,29 +132,35 @@ class McpChatBot:
                 # list available tools
                 response = await session.list_tools()
                 tools = response.tools
-                print('\n Connected to server with tools: ',
-                      [tool.name for tool in tools])
+                print(
+                    "\n Connected to server with tools: ", [tool.name for tool in tools]
+                )
 
                 for tool in response.tools:
                     self.sessions[tool.name] = session
-                    self.available_tools.append({
-                        "type": "function",
-                        "function": {
-                            "name": tool.name,
-                            "description": tool.description,
-                            "parameters": tool.inputSchema
+                    self.available_tools.append(
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": tool.name,
+                                "description": tool.description,
+                                "parameters": tool.inputSchema,
+                            },
                         }
-                    })
+                    )
 
                 # list available prompts
                 prompts_response = await session.list_prompts()
                 if prompts_response and prompts_response.prompts:
                     for prompt in prompts_response.prompts:
                         self.sessions[prompt.name] = session
-                        self.available_prompts.append({
-                            'name': prompt.name,
-                            'description': prompt.description,
-                            'arguments': prompt.arguments})
+                        self.available_prompts.append(
+                            {
+                                "name": prompt.name,
+                                "description": prompt.description,
+                                "arguments": prompt.arguments,
+                            }
+                        )
 
                 # list available resources
                 resources_response = await session.list_resources()
@@ -162,10 +179,10 @@ class McpChatBot:
         print("\nAvailable prompts:")
         for prompt in self.available_prompts:
             print(f"- {prompt['name']}: {prompt['description']}")
-            if prompt['arguments']:
+            if prompt["arguments"]:
                 print(f"    Arguments")
-                for arg in prompt['arguments']:
-                    name = arg.name if hasattr(arg, 'name') else arg.get('name', '')
+                for arg in prompt["arguments"]:
+                    name = arg.name if hasattr(arg, "name") else arg.get("name", "")
                     if name:
                         print(f"        - {name}")
 
@@ -184,7 +201,7 @@ class McpChatBot:
 
             if isinstance(prompt_content, str):
                 text = prompt_content
-            elif hasattr(prompt_content, 'text'):
+            elif hasattr(prompt_content, "text"):
                 text = prompt_content.text
             else:
                 # other object to parse text...
@@ -222,5 +239,5 @@ async def main():
     await chat_bot.connect_to_server_and_run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
