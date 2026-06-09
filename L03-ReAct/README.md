@@ -248,6 +248,8 @@ if msg.tool_calls:
 
 可以看到使用模型提供的Function Call执行逻辑很清晰，不像上面使用[ReAct Prompt](#react-prompt)中间步骤那样混乱。
 
+[langsmith运行日志](https://smith.langchain.com/public/ac2f8879-04ad-4966-8b29-433906125098/r)
+
 ```python
 ------------------iteration<1>----------------------
 LLM Output:
@@ -285,7 +287,3 @@ Final Answer:
 应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。请问还有其他需要帮您查询的吗？
 ————————————————————————————————————————————————————————————
 ```
-
-# todo
-
-居然能够打印@trace

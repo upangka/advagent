@@ -9,8 +9,12 @@ import json
 import os
 from typing import Literal
 
+import dotenv
 from langsmith import traceable
 from openai import OpenAI
+
+# Enable tracing with LangSmith
+dotenv.load_dotenv()
 
 """
 Infrastructure: Function-Tool
@@ -130,7 +134,7 @@ def execute_tool(tool: str, tool_args: str) -> str:
     return str(func(**kwargs))
 
 
-@traceable(name="ReAct Agent")
+@traceable(name="Function Call ReAct Agent")
 def run(question: str) -> str:
     msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
     msgs.append({"role": "user", "content": question})
