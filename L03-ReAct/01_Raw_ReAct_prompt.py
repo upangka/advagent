@@ -2,17 +2,21 @@
 LLM justs outputs raw text,we parse it with regex
 to handle tool calls and get the final answer
 """
+
+import inspect
 import os
 from typing import Literal
+
 import dotenv
-from openai import OpenAI
 from langsmith import traceable
-import inspect
+from openai import OpenAI
+
 dotenv.load_dotenv()
 
 llm = OpenAI(
-    api_key=os.environ.get('DEEPSEEK_API_KEY'),
-    base_url="https://api.deepseek.com")
+    api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
+)
+
 
 def invoke_llm(full_prompt: str):
     llm.chat.completions.create(
@@ -20,11 +24,11 @@ def invoke_llm(full_prompt: str):
         messages=[
             {"role": "user", "content": full_prompt},
         ],
-        stop="\nObservation",   # Stop World
+        stop="\nObservation",  # Stop World
         stream=False,
         reasoning_effort="high",
-        extra_body={"thinking": {"type": "enabled"}}
-)
+        extra_body={"thinking": {"type": "enabled"}},
+    )
 
 
 @traceable(run_type="tool")
@@ -36,15 +40,15 @@ def get_product_price(product: str) -> float:
 
 
 @traceable(run_type="tool")
-def apply_discount(price: float, discount_tier: Literal['bronze', 'silver', 'gold']) -> float:
+def apply_discount(
+    price: float, discount_tier: Literal["bronze", "silver", "gold"]
+) -> float:
     """Apply a discount tier to a price and return the final price."""
-    print(f"    >>> Executing apply_discount(price={price},discount_tier='{discount_tier})'")
+    print(
+        f"    >>> Executing apply_discount(price={price},discount_tier='{discount_tier})'"
+    )
     price = float(price)
-    discounts = {
-        'bronze': 5,
-        'silver': 12,
-        'gold': 23
-    }
+    discounts = {"bronze": 5, "silver": 12, "gold": 23}
     discount = discounts.get(discount_tier, 0)
     return round(price * (1 - discount / 100), 2)
 
@@ -52,8 +56,8 @@ def apply_discount(price: float, discount_tier: Literal['bronze', 'silver', 'gol
 def get_tool_descriptions(tools: dict) -> str:
     """Handle all tools to text descriptions"""
     desc = []
-    
-    for name,f in tools.items():
+
+    for name, f in tools.items():
         signature = inspect.signature(f.__wrapped__)
         docstring = inspect.getdoc(f)
         desc.append(f"{name}{signature} - {docstring}")
@@ -61,10 +65,7 @@ def get_tool_descriptions(tools: dict) -> str:
     return "\n".join(desc)
 
 
-tools = {
-    "get_product_price": get_product_price,
-    "apply_discount": apply_discount
-}
+tools = {"get_product_price": get_product_price, "apply_discount": apply_discount}
 
 tool_descriptions = get_tool_descriptions(tools)
 tool_name = ", ".join(tools.keys())
@@ -95,9 +96,7 @@ Thought: """
 
 
 @traceable(name="ReAct Loop backup DeepSeek")
-def run():
-    ...
-
+def run(): ...
 
 
 if __name__ == "__main__":
