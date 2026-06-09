@@ -102,7 +102,6 @@ def invoke_llm(msgs: list):
         messages=msgs,
         tools=tools_schema,  # type: ignore
         stream=False,
-        reasoning_effort="high",
         extra_body={"thinking": {"type": "disabled"}},
     )
 
@@ -112,6 +111,7 @@ def invoke_llm(msgs: list):
 """ReAct"""
 # 防御性提示词设计:
 SYSTEM_PROMPT = """
+你是一个商品客户助手，你能够使用工具来更好的服务客户。
 **严格规则**——你必须完全遵守以下规则：
 1. 绝对不要猜测或假设任何商品价格。你必须先调用 `get_product_price` 获取真实价格。
 2. 只有在通过 `get_product_price` 获取到价格之后，才能调用 `apply_discount`。传入的参数必须是 `get_product_price` 返回的精确价格——不要传入一个编造的数字。
@@ -142,11 +142,17 @@ def run(question: str) -> str:
         print(f"LLM Output:\n{msg.content}")
         if msg.tool_calls:
             for tool_call in msg.tool_calls:
+                # 模型返回的工具已经封装好了json参数，我们直接解析并调用对应函数即可
                 tool = tool_call.function.name
                 tool_args = tool_call.function.arguments
+
+                print(
+                    f"Calling tool: {tool} with args: {tool_args}\n\t {type(tool_args)=}\n")
+
                 try:
                     tool_output = execute_tool(tool, tool_args)
                 except Exception as e:
+                    # 处理异常
                     print(f"Error occurred while executing tool {tool}: {e}")
                     msgs.append(
                         {
@@ -176,4 +182,6 @@ def run(question: str) -> str:
 if __name__ == "__main__":
     question = "应用gold折扣后，一台laptop的价格是多少"
     final_answer = run(question)
+    print("——" * 30)
     print(f"Final Answer:\n{final_answer}")
+    print("——" * 30)

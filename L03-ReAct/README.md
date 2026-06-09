@@ -190,6 +190,102 @@ Observation: 1000.99
 See you next time :)
 ```
 
+---
+
+# 原始的Function Call
+
+[02_Raw_ReAct_Function_Call.py](./02_Raw_ReAct_Function_Call.py)
+
+使用原始的Function Call的时候，需要自己定义好tool schema:
+
+```python
+tools_schema = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_product_price",
+            "description": "Look up the price of a product in the catalog.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "product": {
+                        "type": "string",
+                        "description": "The product name to look up in the catalog.",
+                    }
+                },
+                "required": ["product"],
+            },
+        },
+    },
+    ...
+]
+```
+
+> **核心**：
+>
+> 1. LLM Output,通过tool_calls属性判断是否需要调用工具，如果需要调用工具，则解析工具参数并调用对应工具。
+> 2. 通过tools_mapping将工具名称映射到对应的函数，方便调用。
+> 3. 执行函数
+
+```python
+msg = invoke_llm(msgs)
+msgs.append(msg)
+if msg.tool_calls:
+    for tool_call in msg.tool_calls:
+        # 模型返回的工具已经封装好了json参数，我们直接解析并调用对应函数即可
+        tool = tool_call.function.name
+        tool_args = tool_call.function.arguments
+        tool_output = execute_tool(tool, tool_args)
+```
+
+## 模型支持的Tools Call
+
+[DeepSeek Tools Call](https://api-docs.deepseek.com/zh-cn/guides/tool_calls)模型提供支持的tools call,简化了我们需要解析模型输出的意图，通过`msg.tool_calls`直接判断它是否需要调用工具，如果不需要调用工具，则直接返回结果。
+
+而且需要调用哪些工具，以及工具需要的参数都以json字符的格式返回了。
+
+## 程序运行
+
+可以看到使用模型提供的Function Call执行逻辑很清晰，不像上面使用[ReAct Prompt](#react-prompt)中间步骤那样混乱。
+
+```python
+------------------iteration<1>----------------------
+LLM Output:
+好的，我先来查询 laptop 的价格。
+Calling tool: get_product_price with args: {"product": "laptop"}
+         type(tool_args)=<class 'str'>
+
+    >>> Executing get_product_price(product='laptop')
+------------------iteration<2>----------------------
+LLM Output:
+已获取到 laptop 的价格为 **$1299.99**。现在我来为您应用 gold 折扣：
+Calling tool: apply_discount with args: {"price": 1299.99, "discount_tier": "gold"}
+         type(tool_args)=<class 'str'>
+
+    >>> Executing apply_discount(price=1299.99,discount_tier='gold)'
+------------------iteration<3>----------------------
+LLM Output:
+查询结果如下：
+
+- **商品**：Laptop
+- **原价**：$1,299.99
+- **折扣档位**：Gold
+- **折后价格**：**$1,000.99**
+
+应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。请问还有其他需要帮您查询的吗？
+————————————————————————————————————————————————————————————
+Final Answer:
+查询结果如下：
+
+- **商品**：Laptop
+- **原价**：$1,299.99
+- **折扣档位**：Gold
+- **折后价格**：**$1,000.99**
+
+应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。请问还有其他需要帮您查询的吗？
+————————————————————————————————————————————————————————————
+```
+
 # todo
 
 居然能够打印@trace
