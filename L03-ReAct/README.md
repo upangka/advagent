@@ -410,3 +410,46 @@ Final Answer:
 应用 Gold 折扣后，一台 laptop 的价格是 **$1,000.99**。
 ————————————————————————————————————————————————————————————
 ```
+
+# LangChaing高度抽象Agent
+
+> [LangChain【Agent】文档](https://docs.langchain.com/oss/python/langchain/agents)
+> An agent is a model calling tools in a loop until a given task is complete.
+
+![agent_lc](./attachments/agent_lc.png)
+
+从官网的描述来看它封装了ReAct Loop，并且自动帮我们调用工具，直到任务完成。并且LangChain对Agent进行了定义：
+**Agent = LLM + Harness**
+
+> The job of a harness: get the model the right context at the right time for the given task.
+>
+> 框架（harness）的职责：在给定任务下，于恰当的时机为模型提供恰当的上下文。
+
+```python
+# 高度封装的ReAct直接得到结果
+# type(agent_result) is dict
+agent_result = agent.invoke(
+    input={"messages": [{"role": "user", "content": question}]}
+)
+return agent_result["messages"][-1].content_blocks
+```
+
+## 程序运行
+
+[LangSmith运行日志](https://smith.langchain.com/public/cc6f2821-7c59-4642-9736-eaf044954413/r)
+
+```python
+    >>> Running agent with question: 应用gold折扣后，一台laptop的价格是多少
+    >>> Executing get_product_price(product='laptop')
+    >>> Executing apply_discount(price=1299.99,discount_tier='gold)'
+——————————————————————————————————————————————————————————————————————————————————————————
+answer = 查询结果如下：
+
+- **商品**：Laptop
+- **原价**：$1299.99
+- **折扣档位**：Gold
+- **折后价格**：**$1000.99**
+
+应用 gold 折扣后，一台 laptop 的价格为 **$1000.99**。
+——————————————————————————————————————————————————————————————————————————————————————————
+```

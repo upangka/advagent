@@ -98,12 +98,10 @@ def run(question: str) -> str:
                     # Note: use invoke() instead of __call__()
                     observation = tool.invoke(toolargs)
                     msgs.append(
-                        ToolMessage(content=str(observation),
-                                    tool_call_id=tool_call_id)
+                        ToolMessage(content=str(observation), tool_call_id=tool_call_id)
                     )
                 except Exception as e:
-                    print(
-                        f"    >>> Error occurred while executing {toolname}: {e}")
+                    print(f"    >>> Error occurred while executing {toolname}: {e}")
                     msgs.append(
                         ToolMessage(
                             content=f"[Error] Failed to execute {toolname}: {e}. Try Again",
