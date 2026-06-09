@@ -43,7 +43,11 @@ def get_product_price(product: str) -> float:
 def apply_discount(
     price: float, discount_tier: Literal["bronze", "silver", "gold"]
 ) -> float:
-    """Apply a discount tier to a price and return the final price."""
+    """Apply a discount tier to a price and return the final price.
+    Args:
+        price: 价格
+        discount_tier: 折扣档位
+    """
     print(
         f"    >>> Executing apply_discount(price={price},discount_tier='{discount_tier})'"
     )
@@ -74,6 +78,12 @@ tool_name = ", ".join(tools.keys())
 # 防御性提示词设计: 防止模型幻觉
 
 react_prompt = f"""
+**严格规则**——你必须完全遵守以下规则：
+1. 绝对不要猜测或假设任何商品价格。你必须先调用 `get_product_price` 获取真实价格。
+2. 只有在通过 `get_product_price` 获取到价格之后，才能调用 `apply_discount`。传入的参数必须是 `get_product_price` 返回的精确价格——不要传入一个编造的数字。
+3. 绝对不要自己用数学计算折扣。始终使用 `apply_discount` 工具。
+4. 如果用户没有指定折扣档位，请询问用户使用哪个档位——不要自行假设一个。
+
 请尽你所能回答以下问题。你可以使用以下工具: 
 
 {tool_descriptions}
