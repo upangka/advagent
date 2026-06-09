@@ -4,7 +4,9 @@ to handle tool calls and get the final answer
 """
 
 import inspect
+import json
 import os
+import re
 from typing import Literal
 
 import dotenv
@@ -13,13 +15,16 @@ from openai import OpenAI
 
 dotenv.load_dotenv()
 
+MAX_ITERATIONS = 10
+
 llm = OpenAI(
     api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
 )
 
 
+@traceable(name="DeepSeek Chat", run_type="llm")
 def invoke_llm(full_prompt: str):
-    llm.chat.completions.create(
+    response = llm.chat.completions.create(
         model="deepseek-v4-flash",
         messages=[
             {"role": "user", "content": full_prompt},
@@ -30,11 +35,13 @@ def invoke_llm(full_prompt: str):
         extra_body={"thinking": {"type": "enabled"}},
     )
 
+    return response.choices[0].message
+
 
 @traceable(run_type="tool")
 def get_product_price(product: str) -> float:
     """Look up the price of a product in the catalog."""
-    print(f"    >>> Executing get_product_price(product='{product}')")
+    print(f"    >>> Executing get_product_price(product={product!r})")
     catalog = {"laptop": 1299.99, "headphones": 149.95, "keyboard": 89.50}
     return catalog.get(product, 0.0)
 
@@ -69,7 +76,8 @@ def get_tool_descriptions(tools: dict) -> str:
     return "\n".join(desc)
 
 
-tools = {"get_product_price": get_product_price, "apply_discount": apply_discount}
+tools = {"get_product_price": get_product_price,
+         "apply_discount": apply_discount}
 
 tool_descriptions = get_tool_descriptions(tools)
 tool_name = ", ".join(tools.keys())
@@ -83,12 +91,13 @@ react_prompt = f"""
 2. 只有在通过 `get_product_price` 获取到价格之后，才能调用 `apply_discount`。传入的参数必须是 `get_product_price` 返回的精确价格——不要传入一个编造的数字。
 3. 绝对不要自己用数学计算折扣。始终使用 `apply_discount` 工具。
 4. 如果用户没有指定折扣档位，请询问用户使用哪个档位——不要自行假设一个。
+5. Action Input: 该动作的输入内容必须是json字符串的形式
 
-请尽你所能回答以下问题。你可以使用以下工具: 
+请尽你所能回答以下问题。你可以使用以下工具:
 
 {tool_descriptions}
 
-请使用以下格式: 
+请使用以下格式:
 
 Question: 你需要回答的输入问题
 Thought: 你应该始终思考下一步要做什么
@@ -102,12 +111,69 @@ Final Answer: 对原始输入问题的最终答案
 开始！
 
 Question: {{question}}
-Thought: """
+"""
 
 
 @traceable(name="ReAct Loop backup DeepSeek")
-def run(): ...
+def run(question: str):
+    prompt = react_prompt.format(question=question)
+    scratchpad = ""
+    final_answer = "Not Found"
+    for i in range(1, MAX_ITERATIONS + 1):
+        print(f"------------------iteration<{i}>----------------------")
+        full_prompt = prompt + scratchpad + "\nThought: "
+        msg = invoke_llm(full_prompt)
+        content = msg.content.strip()  # type: ignore
+
+        print(f"LLM Output:\n{content}")
+        final_answer_match = re.search(r"Final Answer:\s*(.+)", content)
+        if final_answer_match:
+            final_answer = final_answer_match.group(1).strip()
+            print(f"  [Parsed] Final Answer: {final_answer}")
+            print("\n" + "=" * 60)
+            print(f"Final Answer: {final_answer}")
+            break
+
+        # 匹配 "Action:" 后面的非空内容(去除前导空白)并捕获该内容
+        action_match = re.search(r"Action:\s*(.+)", content)
+        action_input_match = re.search(r"Action Input:\s*(.+)", content)
+
+        if not action_match or not action_input_match:
+            error = "[Parsing] ERROR: Could not parse Action/Action Input from assistant output. Try Again"
+            print(error)
+            scratchpad += f"\n{msg.content}\n{error}"
+            continue
+
+        toolname = action_match.group(1).strip()
+        toolargs = action_input_match.group(1).strip()
+
+        tool = tools.get(toolname)
+        if not tool:
+            error = f"[Parsing] ERROR: Tool '{toolname}' not found. Try Again"
+            print(error)
+            scratchpad += f"\n{msg.content}\n{error}"
+            continue
+
+        try:
+            args = json.loads(toolargs)
+        except json.JSONDecodeError:
+            error = f"[Parsing] ERROR: Action Input is not valid JSON. Try Again"
+            print(error)
+            scratchpad += f"\n{msg.content}\n{error}"
+            continue
+
+        result = tool(**args)
+        observation = f"Observation: {result}"
+        print(observation)
+        scratchpad += f"\n{msg.content}\n{observation}"
+    else:
+        print("Max iterations reached. Exiting.")
+        return "Max iterations reached. Exiting."
+    print("--"*30)
+    print(scratchpad)
+    print("--"*30)
+    return final_answer
 
 
 if __name__ == "__main__":
-    ...
+    run("应用gold折扣后，一台laptop的价格是多少")
