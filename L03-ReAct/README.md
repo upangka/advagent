@@ -228,14 +228,15 @@ tools_schema = [
 > 3. 执行函数
 
 ```python
-msg = invoke_llm(msgs)
-msgs.append(msg)
-if msg.tool_calls:
-    for tool_call in msg.tool_calls:
-        # 模型返回的工具已经封装好了json参数，我们直接解析并调用对应函数即可
-        tool = tool_call.function.name
-        tool_args = tool_call.function.arguments
-        tool_output = execute_tool(tool, tool_args)
+for i in range(1, MAX_ITERATIONS + 1):
+    msg = invoke_llm(msgs)
+    msgs.append(msg)
+    if msg.tool_calls:
+        for tool_call in msg.tool_calls:
+            # 模型返回的工具已经封装好了json参数，我们直接解析并调用对应函数即可
+            tool = tool_call.function.name
+            tool_args = tool_call.function.arguments
+            tool_output = execute_tool(tool, tool_args)
 ```
 
 ## 模型支持的Tools Call
