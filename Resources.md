@@ -25,6 +25,7 @@
 - [itheima-chain-cloud](https://gitee.com/itheima-chain-cloud)
 - [jackfrued/Python-100-Days](https://github.com/jackfrued/Python-100-Days/tree/master)
 - [LLM In Action](https://wangwei1237.github.io/LLM_in_Action/)
+- [learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering)
 
 ## Github User Guys
 
