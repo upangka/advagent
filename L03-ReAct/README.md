@@ -15,7 +15,9 @@ ReAct: 奠定现代Agentic应用的架构，或者说算法，本质上它是利
 不使用Function Call，利用提示词提示，让模型持续`成语接龙`。
 这也是Agent ReAct最原始的一种实现思路。
 
-更具以下ReAct的提示词思路，我们设计自己的提示词。
+## 提示词设计
+
+根据以下ReAct的提示词思路，我们设计自己的提示词。
 
 - [langsmith/hwchase17/react](https://smith.langchain.com/hub/hwchase17/react)
 - [langsmith/hwchase17/react-chat](https://smith.langchain.com/hub/hwchase17/react-chat)
@@ -50,7 +52,77 @@ Question: {{question}}
 """
 ```
 
+让模型补全对话
+
+```python
+prompt = react_prompt.format(question=question)
+scratchpad = ""
+final_answer = "Not Found"
+
+for i in range(1, MAX_ITERATIONS + 1):
+    full_prompt = prompt + scratchpad + "\nThought: "
+    msg = invoke_llm(full_prompt)
+    content = msg.content.strip() if msg.content else ""
+    # Check for final answer
+    final_answer = parse_final_answer(content)
+    ...
+
+    # Parse action and action input
+    toolname, toolargs = parse_action_and_input(content)
+
+    # Execute tool
+    tool_result = execute_tool(toolname, toolargs, tools)
+    ...
+
+    # Handle successful tool execution
+    observation = f"Observation: {tool_result.result}"
+
+    # 补全对话，继续循环
+    scratchpad += (
+        f"\n{msg.content}\n{observation}" if msg.content else f"\n{observation}"
+    )
+```
+
+## 模型的stop停用词
+
+> [DeepSeek对话补全](https://api-docs.deepseek.com/zh-cn/api/create-chat-completion)
+> stop: 在遇到这些词时，API 将停止生成更多的 token
+
+![stop](./attachments/deepseek_stop.png)
+
+```python
+llm.chat.completions.create(
+        model="deepseek-v4-pro",
+        messages=[
+            {"role": "user", "content": full_prompt},
+        ],
+        stop="\nObservation",  # Stop World
+        stream=False,
+        reasoning_effort="high",
+        extra_body={"thinking": {"type": "enabled"}},
+    )
+```
+
+## 元编程抽离方法信息
+
+这里和Java的反射操作差不多，在Python中主要是使用inspect模块来获取函数的参数和返回值，以及文档（虽然也可以直接在函数对象上可以获取到文档）
+
 ![tool_desc.pg](./attachments/tool_desc.png)
+
+```python
+def get_tool_descriptions(tools: dict) -> str:
+    """Handle all tools to text descriptions"""
+    desc = []
+
+    for name, f in tools.items():
+        signature = inspect.signature(f.__wrapped__)
+        docstring = inspect.getdoc(f)
+        desc.append(f"{name}{signature} - {docstring}")
+
+    return "\n".join(desc)
+```
+
+## 程序运行
 
 [langsmith运行日志](https://smith.langchain.com/public/a49caa23-c18c-4289-bb6b-2c3e4ff09288/r)
 程序运行结果:
