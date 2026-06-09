@@ -3,14 +3,12 @@ LLM justs outputs raw text,we parse it with regex
 to handle tool calls and get the final answer
 """
 
-from collections import namedtuple
-from typing import Literal, Optional, Tuple, Any, NamedTuple
-
 import inspect
 import json
 import os
 import re
-from typing import Literal, Optional, Tuple, Any
+from collections import namedtuple
+from typing import Any, Literal, NamedTuple, Optional, Tuple
 
 import dotenv
 from langsmith import traceable
@@ -18,7 +16,7 @@ from openai import OpenAI
 
 dotenv.load_dotenv()
 
-MAX_ITERATIONS = 5
+MAX_ITERATIONS = 10
 
 llm = OpenAI(
     api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
@@ -93,8 +91,7 @@ def parse_action_and_input(content: str) -> Tuple[Optional[str], Optional[str]]:
     action_input_match = re.search(r"Action Input:\s*(.+)", content)
 
     action = action_match.group(1).strip() if action_match else None
-    action_input = action_input_match.group(
-        1).strip() if action_input_match else None
+    action_input = action_input_match.group(1).strip() if action_input_match else None
 
     return action, action_input
 
@@ -111,12 +108,16 @@ def execute_tool(tool_name: str, tool_args_str: str, tools: dict) -> ToolExecute
     """
     tool = tools.get(tool_name)
     if not tool:
-        return ToolExecuteResult(None, f"[Parsing] ERROR: Tool '{tool_name}' not found. Try Again")
+        return ToolExecuteResult(
+            None, f"[Parsing] ERROR: Tool '{tool_name}' not found. Try Again"
+        )
 
     try:
         args = json.loads(tool_args_str)
     except json.JSONDecodeError:
-        return ToolExecuteResult(None, f"[Parsing] ERROR: Action Input is not valid JSON. Try Again")
+        return ToolExecuteResult(
+            None, f"[Parsing] ERROR: Action Input is not valid JSON. Try Again"
+        )
 
     try:
         result = tool(**args)
@@ -159,25 +160,30 @@ def run(question: str):
         tool_result = execute_tool(toolname, toolargs, tools)
         if tool_result.error:
             print(tool_result.error)
-            scratchpad += f"\n{msg.content}\n{tool_result.error}" if msg.content else f"\n{tool_result.error}"
+            scratchpad += (
+                f"\n{msg.content}\n{tool_result.error}"
+                if msg.content
+                else f"\n{tool_result.error}"
+            )
             continue
 
         # Handle successful tool execution
         observation = f"Observation: {tool_result.result}"
         print(observation)
-        scratchpad += f"\n{msg.content}\n{observation}" if msg.content else f"\n{observation}"
+        scratchpad += (
+            f"\n{msg.content}\n{observation}" if msg.content else f"\n{observation}"
+        )
     else:
         print("Max iterations reached. Exiting.")
         return "Max iterations reached. Exiting."
 
-    print("--"*30)
+    print("--" * 30)
     print(scratchpad)
-    print("--"*30)
+    print("--" * 30)
     return final_answer
 
 
-tools = {"get_product_price": get_product_price,
-         "apply_discount": apply_discount}
+tools = {"get_product_price": get_product_price, "apply_discount": apply_discount}
 
 tool_descriptions = get_tool_descriptions(tools)
 tool_name = ", ".join(tools.keys())
@@ -216,3 +222,4 @@ Question: {{question}}
 
 if __name__ == "__main__":
     run("应用gold折扣后，一台laptop的价格是多少")
+    print("See you next time :)")
