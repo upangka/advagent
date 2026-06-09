@@ -1,8 +1,6 @@
-> Older-School Coder: Happy Coding :-)
+> Older-School JavaCoder: Happy Coding :-)
 
-Older-School JavaCoder: 从Java Web Application转Python Agentic Application实践之旅
-
-Programmer: A Practical Journey from Java Web Application to Python Agentic Application
+给JavaWeb开发程序员转型为Python智能体应用开发的指南手册。
 
 - [L02-MCP](./L02-mcp/README.md)
   - [chatbot - (Mcp Build Rich Context Ai Apps With Anthropic)](L02-mcp/S01-chatbot/README.md)
