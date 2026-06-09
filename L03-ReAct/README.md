@@ -15,8 +15,40 @@ ReAct: 奠定现代Agentic应用的架构，或者说算法，本质上它是利
 不使用Function Call，利用提示词提示，让模型持续`成语接龙`。
 这也是Agent ReAct最原始的一种实现思路。
 
+更具以下ReAct的提示词思路，我们设计自己的提示词。
+
 - [langsmith/hwchase17/react](https://smith.langchain.com/hub/hwchase17/react)
 - [langsmith/hwchase17/react-chat](https://smith.langchain.com/hub/hwchase17/react-chat)
+
+```python
+react_prompt = f"""
+**严格规则**——你必须完全遵守以下规则：
+1. 绝对不要猜测或假设任何商品价格。你必须先调用 `get_product_price` 获取真实价格。
+2. 只有在通过 `get_product_price` 获取到价格之后，才能调用 `apply_discount`。传入的参数必须是 `get_product_price` 返回的精确价格——不要传入一个编造的数字。
+3. 绝对不要自己用数学计算折扣。始终使用 `apply_discount` 工具。
+4. 如果用户没有指定折扣档位，请询问用户使用哪个档位——不要自行假设一个。
+5. Action Input: 该动作的输入内容必须是json字符串的形式
+
+请尽你所能回答以下问题。你可以使用以下工具:
+
+{tool_descriptions}
+
+请使用以下格式:
+
+Question: 你需要回答的输入问题
+Thought: 你应该始终思考下一步要做什么
+Action: 要执行的动作，应为 [{tool_name}] 之一
+Action Input: 该动作的输入内容
+Observation: 动作执行的结果
+...（这个 Thought/Action/Action Input/Observation 可以重复 N 次）
+Thought: 我现在知道最终答案了
+Final Answer: 对原始输入问题的最终答案
+
+开始！
+
+Question: {{question}}
+"""
+```
 
 ![tool_desc.pg](./attachments/tool_desc.png)
 
