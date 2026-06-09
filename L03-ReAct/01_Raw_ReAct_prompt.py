@@ -3,11 +3,14 @@ LLM justs outputs raw text,we parse it with regex
 to handle tool calls and get the final answer
 """
 
+from collections import namedtuple
+from typing import Literal, Optional, Tuple, Any, NamedTuple
+
 import inspect
 import json
 import os
 import re
-from typing import Literal
+from typing import Literal, Optional, Tuple, Any
 
 import dotenv
 from langsmith import traceable
@@ -15,7 +18,7 @@ from openai import OpenAI
 
 dotenv.load_dotenv()
 
-MAX_ITERATIONS = 10
+MAX_ITERATIONS = 5
 
 llm = OpenAI(
     api_key=os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"
@@ -25,7 +28,7 @@ llm = OpenAI(
 @traceable(name="DeepSeek Chat", run_type="llm")
 def invoke_llm(full_prompt: str):
     response = llm.chat.completions.create(
-        model="deepseek-v4-flash",
+        model="deepseek-v4-pro",
         messages=[
             {"role": "user", "content": full_prompt},
         ],
@@ -76,6 +79,103 @@ def get_tool_descriptions(tools: dict) -> str:
     return "\n".join(desc)
 
 
+def parse_final_answer(content: str) -> Optional[str]:
+    """Extract final answer from LLM response content."""
+    final_answer_match = re.search(r"Final Answer:\s*(.+)", content)
+    if final_answer_match:
+        return final_answer_match.group(1).strip()
+    return None
+
+
+def parse_action_and_input(content: str) -> Tuple[Optional[str], Optional[str]]:
+    """Extract action and action input from LLM response content."""
+    action_match = re.search(r"Action:\s*(.+)", content)
+    action_input_match = re.search(r"Action Input:\s*(.+)", content)
+
+    action = action_match.group(1).strip() if action_match else None
+    action_input = action_input_match.group(
+        1).strip() if action_input_match else None
+
+    return action, action_input
+
+
+class ToolExecuteResult(NamedTuple):
+    result: Any
+    error: Optional[str]
+
+
+def execute_tool(tool_name: str, tool_args_str: str, tools: dict) -> ToolExecuteResult:
+    """
+    Execute a tool with given arguments.
+    Returns ToolExecuteResult with result and error_message (None if successful).
+    """
+    tool = tools.get(tool_name)
+    if not tool:
+        return ToolExecuteResult(None, f"[Parsing] ERROR: Tool '{tool_name}' not found. Try Again")
+
+    try:
+        args = json.loads(tool_args_str)
+    except json.JSONDecodeError:
+        return ToolExecuteResult(None, f"[Parsing] ERROR: Action Input is not valid JSON. Try Again")
+
+    try:
+        result = tool(**args)
+        return ToolExecuteResult(result, None)
+    except Exception as e:
+        return ToolExecuteResult(None, f"[Parsing] ERROR: {e}. Try Again")
+
+
+@traceable(name="ReAct Loop backup DeepSeek")
+def run(question: str):
+    prompt = react_prompt.format(question=question)
+    scratchpad = ""
+    final_answer = "Not Found"
+
+    for i in range(1, MAX_ITERATIONS + 1):
+        print(f"------------------iteration<{i}>----------------------")
+        full_prompt = prompt + scratchpad + "\nThought: "
+        msg = invoke_llm(full_prompt)
+        content = msg.content.strip() if msg.content else ""  # type: ignore
+
+        print(f"LLM Output:\n{content}")
+
+        # Check for final answer
+        final_answer = parse_final_answer(content)
+        if final_answer:
+            print(f"  [Parsed] Final Answer: {final_answer}")
+            print("\n" + "=" * 60)
+            print(f"Final Answer: {final_answer}")
+            break
+
+        # Parse action and action input
+        toolname, toolargs = parse_action_and_input(content)
+        if not toolname or not toolargs:
+            error = "[Parsing] ERROR: Could not parse Action/Action Input from assistant output. Try Again"
+            print(error)
+            scratchpad += f"\n{msg.content}\n{error}" if msg.content else f"\n{error}"
+            continue
+
+        # Execute tool
+        tool_result = execute_tool(toolname, toolargs, tools)
+        if tool_result.error:
+            print(tool_result.error)
+            scratchpad += f"\n{msg.content}\n{tool_result.error}" if msg.content else f"\n{tool_result.error}"
+            continue
+
+        # Handle successful tool execution
+        observation = f"Observation: {tool_result.result}"
+        print(observation)
+        scratchpad += f"\n{msg.content}\n{observation}" if msg.content else f"\n{observation}"
+    else:
+        print("Max iterations reached. Exiting.")
+        return "Max iterations reached. Exiting."
+
+    print("--"*30)
+    print(scratchpad)
+    print("--"*30)
+    return final_answer
+
+
 tools = {"get_product_price": get_product_price,
          "apply_discount": apply_discount}
 
@@ -112,67 +212,6 @@ Final Answer: 对原始输入问题的最终答案
 
 Question: {{question}}
 """
-
-
-@traceable(name="ReAct Loop backup DeepSeek")
-def run(question: str):
-    prompt = react_prompt.format(question=question)
-    scratchpad = ""
-    final_answer = "Not Found"
-    for i in range(1, MAX_ITERATIONS + 1):
-        print(f"------------------iteration<{i}>----------------------")
-        full_prompt = prompt + scratchpad + "\nThought: "
-        msg = invoke_llm(full_prompt)
-        content = msg.content.strip()  # type: ignore
-
-        print(f"LLM Output:\n{content}")
-        final_answer_match = re.search(r"Final Answer:\s*(.+)", content)
-        if final_answer_match:
-            final_answer = final_answer_match.group(1).strip()
-            print(f"  [Parsed] Final Answer: {final_answer}")
-            print("\n" + "=" * 60)
-            print(f"Final Answer: {final_answer}")
-            break
-
-        # 匹配 "Action:" 后面的非空内容(去除前导空白)并捕获该内容
-        action_match = re.search(r"Action:\s*(.+)", content)
-        action_input_match = re.search(r"Action Input:\s*(.+)", content)
-
-        if not action_match or not action_input_match:
-            error = "[Parsing] ERROR: Could not parse Action/Action Input from assistant output. Try Again"
-            print(error)
-            scratchpad += f"\n{msg.content}\n{error}"
-            continue
-
-        toolname = action_match.group(1).strip()
-        toolargs = action_input_match.group(1).strip()
-
-        tool = tools.get(toolname)
-        if not tool:
-            error = f"[Parsing] ERROR: Tool '{toolname}' not found. Try Again"
-            print(error)
-            scratchpad += f"\n{msg.content}\n{error}"
-            continue
-
-        try:
-            args = json.loads(toolargs)
-        except json.JSONDecodeError:
-            error = f"[Parsing] ERROR: Action Input is not valid JSON. Try Again"
-            print(error)
-            scratchpad += f"\n{msg.content}\n{error}"
-            continue
-
-        result = tool(**args)
-        observation = f"Observation: {result}"
-        print(observation)
-        scratchpad += f"\n{msg.content}\n{observation}"
-    else:
-        print("Max iterations reached. Exiting.")
-        return "Max iterations reached. Exiting."
-    print("--"*30)
-    print(scratchpad)
-    print("--"*30)
-    return final_answer
 
 
 if __name__ == "__main__":
