@@ -13,6 +13,8 @@ from langchain.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain.tools import tool
 from langsmith import traceable
 
+from helper import SYSTEM_PROMPT
+
 # enable tracing with LangSmith
 dotenv.load_dotenv()
 
@@ -56,15 +58,6 @@ tools_mapping = {tool.name: tool for tool in tools}
 
 #  Bind tools: under the hood, automatically generate tool schemas for the model.
 llm_with_tools = llm.bind_tools(tools)
-
-SYSTEM_PROMPT = """
-你是一个商品客户助手，你能够使用工具来更好的服务客户。
-**严格规则**——你必须完全遵守以下规则：
-1. 绝对不要猜测或假设任何商品价格。你必须先调用 `get_product_price` 获取真实价格。
-2. 只有在通过 `get_product_price` 获取到价格之后，才能调用 `apply_discount`。传入的参数必须是 `get_product_price` 返回的精确价格——不要传入一个编造的数字。
-3. 绝对不要自己用数学计算折扣。始终使用 `apply_discount` 工具。
-4. 如果用户没有指定折扣档位，请询问用户使用哪个档位——不要自行假设一个。
-"""
 
 
 @traceable(name="LangChain Abc Agent Loop")
