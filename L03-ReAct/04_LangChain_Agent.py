@@ -48,7 +48,8 @@ def apply_discount(
 
 # Agent = Model +
 agent = create_agent(
-    model=llm, tools=[get_product_price, apply_discount], system_prompt=SYSTEM_PROMPT
+    model=llm, tools=[get_product_price,
+                      apply_discount], system_prompt=SYSTEM_PROMPT
 )
 
 
