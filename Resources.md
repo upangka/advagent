@@ -20,6 +20,10 @@
 
 - [AI Agents 大师课](https://www.bilibili.com/video/BV1WTP6zyE15?spm_id_from=333.788.videopod.sections&vd_source=f9745f81b4981bb1eca8c2d80be33ff9&p=31)
 
+- [claude code for real engineers](https://www.bilibili.com/video/BV1b2QsBUEhd/?spm_id_from=333.1391.0.0&p=24&vd_source=f9745f81b4981bb1eca8c2d80be33ff9)
+
+- [ai-coding-for-real-engineers](https://www.bilibili.com/video/BV1Sp7z6rE2U?spm_id_from=333.788.videopod.episodes&vd_source=f9745f81b4981bb1eca8c2d80be33ff9)
+
 ## Tutorial Repo
 
 - [LangChain-OpenTutorial](https://github.com/LangChain-OpenTutorial/LangChain-OpenTutorial)
