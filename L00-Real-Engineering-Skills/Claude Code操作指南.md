@@ -51,6 +51,12 @@
 }
 ```
 
+# Context Windows
+
+建议在40%的时候就要开始警惕了
+
+![](./images/context_window.png)
+
 
 # 用到的提示词
 
