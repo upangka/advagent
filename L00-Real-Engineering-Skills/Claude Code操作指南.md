@@ -31,18 +31,27 @@
 
 不让claude code看到是`ctrl+z` suspend claude code, 输入`fg`恢复对话
 
-
 ## 权限命令
 
-`settings.local.json`里面记录了在与claude code运行执行的命令。这可以是在对话过程中claude code动态生成的。
+`settings.local.json`里面记录了在与claude code运行执行的命令。这可以是在对话过程中claude code动态生成的，也可以是自己手动编辑。
 
 ```json
 {
   "permissions": {
     "allow": [
       "Bash(npx react-router *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(pnpm *)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(git push *)"
     ]
   }
 }
 ```
+
+
+# 用到的提示词
+
+fetch info about react-route typegen from the web
