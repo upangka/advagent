@@ -72,6 +72,9 @@
 ## Claude Code上下文管理的策略
 
 将任务委派给子agent,这是一个全新的context window,子agent在这个窗口中完成任务，然后返回这个窗口的摘要给主agent,让主agent保持对我们代码库的领域知识。
+
+> Sub-agents operate as a context-saving mechanism and they contribute back to the parent context.
+
 ![](./images/main_sub_agent.png)
 
 这是Claude Code实施的**为了从上下文窗口中获取更多价值**的策略。
@@ -80,10 +83,36 @@
 ![](./images/mul_subagent.png)
 
 
+# 探索explore
+
+先让模型explore我们的代码库
+
+> Tell me what the tech stack of this coderepo and what its intended purpose is  
 
 
+> **Explore** how PPP (Purchasing Power Parity) work in this repo?
+请你去看看这个代码仓库中，关于购买力平价（PPP）的逻辑/实现方式是什么样的。
+
+# 新增功能
+
+1. 先使用plan mode进行规划。
+2. esc退出 plan
+3. /context 查看上下文
+4. 恢复提示词
+
+> Give me the chance to review the plan again
+
+
+![](./images/plan.png)
+
+
+# ccstatusline UI配置
+
+[ccstatusline](https://github.com/sirmalloc/ccstatusline) 
 
 
 # 用到的提示词
 
 fetch info about react-route typegen from the web
+
+Tell me what the tech stack of this coderepo and what its intended purpose is  
