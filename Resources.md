@@ -51,6 +51,17 @@
 - [ao-agents](https://ao-agents.com/docs/)
 - [mildoc](https://github.com/shuhongfan/mildoc)
 
+
+## 研究的框架
+
+- [agentswarm](https://github.com/ai-agentswarm/agentswarm/tree/master)
+
 # 文章
 
 - [agentic-ai-explained-agents-vs-workflows](https://orkes.io/blog/agentic-ai-explained-agents-vs-workflows/)
+
+
+# Learn Website
+
+- [agentswarms](https://agentswarms.fyi/patterns)
+
