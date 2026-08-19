@@ -44,6 +44,45 @@ Agent Skills 的本质，是把"专业知识"从 Agent 的代码中抽离出来�
 1. under the hood, all they really need is a simple scaffolding(底层只需要一个简单骨架)
 2. domain expertise(领域知识) is really where skills shine（领域专业知识是 Skill 发光的地方）
 
+# Progressive Disclosure（渐进式披露）
+
+让 Agent "知道很多，但只思考需要的
+
+| 层级         | 加载状态 | Agent 的认知                            |
+| :----------- | :------- | :-------------------------------------- |
+| Metadata     | 始终加载 | "我拥有 50 个 Skill，分别是什么"        |
+| Instructions | 按需加载 | "我正在用营销分析 Skill，具体步骤是..." |
+| Resources    | 按需加载 | "用户要预算调整，我看看规则文件..."     |
+
+> **类比**：一个顶级律师的大脑里装着几百部法律（Metadata），但开庭时只调取相关法条（Instructions），只有遇到复杂案件才去查详细判例（Resources）。
+
+**实现"专家池"模式**
+
+```txt
+┌─────────────────────────────────────────────────────────────┐
+│                    通用 Agent 的"大脑"                      │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ 常驻内存（Metadata 层）                            │   │
+│  │ 📋 marketing-analyzer   → 分析营销数据             │   │
+│  │ 📋 code-reviewer        → 审查代码                 │   │
+│  │ 📋 legal-compliance     → 法律合规检查             │   │
+│  │ 📋 ppt-creator          → 生成演示文稿             │   │
+│  │ ... (50+ 个 Skill 的名称和描述)                    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                           │
+│  用户说："帮我分析这份营销数据"                            │
+│         ↓                                                │
+│  Agent 查找常驻内存 → 匹配到 marketing-analyzer          │
+│         ↓                                                │
+│  加载 Instructions（第二步）→ 开始执行                   │
+│         ↓                                                │
+│  用户说："顺便做一下预算调整"                            │
+│         ↓                                                │
+│  加载 Resources（第三步）→ 读取预算规则文件              │
+└───────
+```
+
 # 应用场景
 
 Skill 的应用场景拆成三类，每一类代表了 Skill 在不同维度上的价值
