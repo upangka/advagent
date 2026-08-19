@@ -33,6 +33,10 @@ A **skill** is a **folder of organized files** consisting of instructions,script
 ![](./images/scripts.png)
 ![](./images/assets.png)
 
+Agent Skills 的本质，是把"专业知识"从 Agent 的代码中抽离出来，变成独立的、可移植的 Skill 文件。这样，一个通用 Agent 可以通过加载不同的 Skill，在不同场景下表现出"专家级"的能力。
+
+![](./images/skills_slove.png)
+
 # Resource
 
 [Deeplearn.ai: agent-skills-with-anthropic](https://learn.deeplearning.ai/courses/agent-skills-with-anthropic/lesson/ldn5c3/introduction)
